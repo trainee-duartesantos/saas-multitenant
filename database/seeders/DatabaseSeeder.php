@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Tenant;
+use App\Enums\TenantRole;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
@@ -32,7 +33,13 @@ class DatabaseSeeder extends Seeder
             'settings' => [],
         ]);
 
-        $tenantA->users()->attach($user->id, ['role' => 'owner']);
-        $tenantB->users()->attach($user->id, ['role' => 'owner']);
+        // 👇 LIGAÇÃO USER ↔ TENANT COM ROLE (FORMA CORRETA)
+        $tenantA->users()->attach($user->id, [
+            'role' => TenantRole::OWNER->value,
+        ]);
+
+        $tenantB->users()->attach($user->id, [
+            'role' => TenantRole::OWNER->value,
+        ]);
     }
 }
