@@ -18,15 +18,21 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        $tenant = Tenant::create([
+        $tenantA = Tenant::create([
             'uuid' => Str::uuid(),
-            'name' => 'Tenant Demo',
-            'slug' => 'tenant-demo',
+            'name' => 'Tenant Alpha',
+            'slug' => 'tenant-alpha',
             'settings' => [],
         ]);
 
-        $tenant->users()->attach($user->id, [
-            'role' => 'owner',
+        $tenantB = Tenant::create([
+            'uuid' => Str::uuid(),
+            'name' => 'Tenant Beta',
+            'slug' => 'tenant-beta',
+            'settings' => [],
         ]);
+
+        $tenantA->users()->attach($user->id, ['role' => 'owner']);
+        $tenantB->users()->attach($user->id, ['role' => 'owner']);
     }
 }
