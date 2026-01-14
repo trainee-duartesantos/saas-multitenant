@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from "vue";
-import { router, Link } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { usePage, router, Link } from "@inertiajs/vue3";
 
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import Dropdown from "@/Components/Dropdown.vue";
@@ -10,51 +10,49 @@ import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 
 const showingNavigationDropdown = ref(false);
 
+const page = usePage();
+
+const auth = computed(() => page.props.auth ?? {});
+const tenants = computed(() => auth.value.tenants ?? []);
+const currentTenantId = computed(() => auth.value.currentTenantId);
+
 function switchTenant(event) {
-    router.post(
-        route("tenant.switch"),
-        { tenant_id: event.target.value },
-        { preserveScroll: true }
-    );
+    router.post(route("tenant.switch"), {
+        tenant_id: event.target.value,
+    });
 }
 </script>
 
 <template>
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-        <nav
-            class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
-        >
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex h-16 justify-between">
-                    <!-- Left -->
-                    <div class="flex">
-                        <div class="flex shrink-0 items-center">
-                            <Link :href="route('dashboard')">
-                                <ApplicationLogo
-                                    class="h-9 w-auto text-gray-800 dark:text-gray-200"
-                                />
-                            </Link>
-                        </div>
+        <nav class="border-b bg-white dark:bg-gray-800">
+            <div class="mx-auto max-w-7xl px-4">
+                <div class="flex h-16 justify-between items-center">
+                    <!-- LEFT -->
+                    <div class="flex items-center space-x-6">
+                        <Link :href="route('dashboard')">
+                            <ApplicationLogo class="h-8 w-auto" />
+                        </Link>
 
-                        <div
-                            class="hidden sm:ms-10 sm:flex sm:items-center sm:space-x-6"
+                        <NavLink
+                            :href="route('dashboard')"
+                            :active="route().current('dashboard')"
                         >
-                            <NavLink
-                                :href="route('dashboard')"
-                                :active="route().current('dashboard')"
-                            >
-                                Dashboard
-                            </NavLink>
+                            Dashboard
+                        </NavLink>
 
-                            <!-- Tenant Selector -->
+                        <!-- ✅ TENANT SELECTOR -->
+                        <div
+                            v-if="auth.tenants && auth.tenants.length > 1"
+                            class="ms-6 flex items-center"
+                        >
                             <select
-                                v-if="$page.props.auth.tenants?.length > 1"
-                                :value="$page.props.auth.currentTenantId"
+                                class="rounded-md border-gray-300 text-sm px-2 py-1 dark:bg-gray-800 dark:text-gray-200"
                                 @change="switchTenant"
-                                class="rounded-md border-gray-300 text-sm dark:bg-gray-700 dark:text-gray-200"
+                                :value="auth.currentTenantId"
                             >
                                 <option
-                                    v-for="tenant in $page.props.auth.tenants"
+                                    v-for="tenant in auth.tenants"
                                     :key="tenant.id"
                                     :value="tenant.id"
                                 >
@@ -64,44 +62,28 @@ function switchTenant(event) {
                         </div>
                     </div>
 
-                    <!-- Right -->
-                    <div class="hidden sm:flex sm:items-center">
-                        <Dropdown align="right" width="48">
-                            <template #trigger>
-                                <button
-                                    class="flex items-center text-sm text-gray-500 dark:text-gray-400"
-                                >
-                                    {{ $page.props.auth.user.name }}
-                                </button>
-                            </template>
+                    <!-- RIGHT -->
+                    <Dropdown align="right" width="48">
+                        <template #trigger>
+                            <button class="text-sm text-gray-600">
+                                {{ auth.user?.name }}
+                            </button>
+                        </template>
 
-                            <template #content>
-                                <DropdownLink :href="route('profile.edit')">
-                                    Profile
-                                </DropdownLink>
+                        <template #content>
+                            <DropdownLink :href="route('profile.edit')">
+                                Profile
+                            </DropdownLink>
 
-                                <DropdownLink
-                                    :href="route('logout')"
-                                    method="post"
-                                    as="button"
-                                >
-                                    Log Out
-                                </DropdownLink>
-                            </template>
-                        </Dropdown>
-                    </div>
-
-                    <!-- Mobile -->
-                    <div class="-me-2 flex items-center sm:hidden">
-                        <button
-                            @click="
-                                showingNavigationDropdown =
-                                    !showingNavigationDropdown
-                            "
-                        >
-                            ☰
-                        </button>
-                    </div>
+                            <DropdownLink
+                                :href="route('logout')"
+                                method="post"
+                                as="button"
+                            >
+                                Log Out
+                            </DropdownLink>
+                        </template>
+                    </Dropdown>
                 </div>
             </div>
         </nav>

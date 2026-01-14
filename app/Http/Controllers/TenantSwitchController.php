@@ -9,21 +9,15 @@ class TenantSwitchController extends Controller
     public function __invoke(Request $request)
     {
         $request->validate([
-            'tenant_id' => ['required', 'integer'],
+            'tenant_id' => ['required', 'exists:tenants,id'],
         ]);
 
-        $user = $request->user();
-        $tenantId = $request->tenant_id;
+        abort_unless(
+            auth()->user()->tenants()->where('tenants.id', $request->tenant_id)->exists(),
+            403
+        );
 
-        $belongs = $user->tenants()
-            ->where('tenants.id', $tenantId)
-            ->exists();
-
-        if (! $belongs) {
-            abort(403, 'You do not belong to this tenant.');
-        }
-
-        session(['tenant_id' => $tenantId]);
+        session(['tenant_id' => $request->tenant_id]);
 
         return back();
     }
