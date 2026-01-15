@@ -5,6 +5,7 @@ use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TenantInvitationController;
 use App\Http\Controllers\TenantInvitationAcceptController;
+use App\Http\Controllers\TenantMemberController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,6 +33,15 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
     Route::post('/tenant/invitations', [TenantInvitationController::class, 'store'])
         ->name('tenant.invitations.store');
+
+    Route::get('/members', [TenantMemberController::class, 'index'])
+        ->name('tenant.members.index');
+
+    Route::patch('/members/{user}', [TenantMemberController::class, 'update'])
+        ->name('tenant.members.update');
+
+    Route::delete('/members/{user}', [TenantMemberController::class, 'destroy'])
+        ->name('tenant.members.destroy');
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
