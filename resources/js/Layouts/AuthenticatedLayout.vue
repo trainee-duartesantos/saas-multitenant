@@ -6,7 +6,8 @@ import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
-import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
+
+import { useTenantRole } from "@/composables/useTenantRole";
 
 const showingNavigationDropdown = ref(false);
 
@@ -15,6 +16,8 @@ const page = usePage();
 const auth = computed(() => page.props.auth ?? {});
 const tenants = computed(() => auth.value.tenants ?? []);
 const currentTenantId = computed(() => auth.value.currentTenantId);
+
+const { isOwner } = useTenantRole();
 
 function switchTenant(event) {
     router.post(route("tenant.switch"), {
@@ -41,18 +44,19 @@ function switchTenant(event) {
                             Dashboard
                         </NavLink>
 
-                        <!-- ✅ TENANT SELECTOR -->
-                        <div
-                            v-if="auth.tenants && auth.tenants.length > 1"
-                            class="ms-6 flex items-center"
-                        >
+                        <NavLink :href="route('projects.index')">
+                            Projects
+                        </NavLink>
+
+                        <!-- TENANT SELECTOR -->
+                        <div v-if="tenants.length > 1" class="ms-4">
                             <select
-                                class="rounded-md border-gray-300 text-sm px-2 py-1 dark:bg-gray-800 dark:text-gray-200"
+                                class="rounded-md border-gray-300 text-sm px-2 py-1"
                                 @change="switchTenant"
-                                :value="auth.currentTenantId"
+                                :value="currentTenantId"
                             >
                                 <option
-                                    v-for="tenant in auth.tenants"
+                                    v-for="tenant in tenants"
                                     :key="tenant.id"
                                     :value="tenant.id"
                                 >
@@ -73,6 +77,10 @@ function switchTenant(event) {
                         <template #content>
                             <DropdownLink :href="route('profile.edit')">
                                 Profile
+                            </DropdownLink>
+
+                            <DropdownLink v-if="isOwner" href="/billing">
+                                Billing
                             </DropdownLink>
 
                             <DropdownLink

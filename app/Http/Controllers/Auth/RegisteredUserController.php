@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Tenant;
+use App\Enums\TenantRole;
+use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +31,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
+    
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -42,9 +46,21 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $tenant = Tenant::create([
+            'uuid' => Str::uuid(),
+            'name' => $user->name . "'s Workspace",
+            'slug' => Str::slug($user->name) . '-' . Str::random(5),
+            'settings' => [],
+        ]);
+
+        $user->tenants()->attach($tenant->id, [
+            'role' => TenantRole::OWNER->value,
+        ]);
+
         event(new Registered($user));
 
         Auth::login($user);
+        session(['tenant_id' => $tenant->id]);
 
         return redirect(route('dashboard', absolute: false));
     }
