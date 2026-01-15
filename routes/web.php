@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantSwitchController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -23,6 +24,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/tenant/switch', TenantSwitchController::class)
         ->name('tenant.switch');
+
+    Route::get('/projects', [ProjectController::class, 'index'])
+        ->name('projects.index');
+
+    Route::post('/projects', [ProjectController::class, 'store'])
+        ->name('projects.store');
+
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])
+        ->name('projects.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
