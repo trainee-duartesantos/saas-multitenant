@@ -49,4 +49,31 @@ class TenantInvitationAcceptController extends Controller
 
         return redirect()->route('dashboard');
     }
+
+    public function show(string $token)
+    {
+        $invitation = TenantInvitation::with('tenant')
+            ->where('token', $token)
+            ->firstOrFail();
+
+        if ($invitation->isAccepted()) {
+            return inertia('Invitations/AlreadyAccepted');
+        }
+
+        return inertia('Invitations/Accept', [
+            'invitation' => [
+                'email' => $invitation->email,
+                'role' => $invitation->role,
+                'tenant' => [
+                    'name' => $invitation->tenant->name,
+                ],
+            ],
+            'authenticated' => auth()->check(),
+        ]);
+    }
+
+    public function accept(Request $request, string $token)
+    {
+        
+    }
 }

@@ -39,7 +39,12 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/invitations/{token}', TenantInvitationAcceptController::class)
+// Página pública: mostrar convite
+Route::get('/invitations/{token}', [TenantInvitationAcceptController::class, 'show'])
+    ->name('tenant.invitations.show');
+
+// Ação: aceitar convite
+Route::post('/invitations/{token}/accept', [TenantInvitationAcceptController::class, 'accept'])
     ->name('tenant.invitations.accept');
 
 require __DIR__.'/auth.php';
