@@ -47,6 +47,8 @@ class HandleInertiaRequests extends Middleware
                         'name' => $tenant->name,
                     ])->values(),
                     'currentTenantId' => session('tenant_id'),
+
+                    'currentTenantRole' => currentTenantRole()?->value,
                 ];
             },
         ]);
