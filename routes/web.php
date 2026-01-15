@@ -16,23 +16,16 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
+    Route::resource('projects', ProjectController::class);
+
     Route::post('/tenant/switch', TenantSwitchController::class)
         ->name('tenant.switch');
-
-    Route::get('/projects', [ProjectController::class, 'index'])
-        ->name('projects.index');
-
-    Route::post('/projects', [ProjectController::class, 'store'])
-        ->name('projects.store');
-
-    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])
-        ->name('projects.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
