@@ -27,4 +27,10 @@ class TenantInvitation extends Model
     {
         return ! is_null($this->accepted_at);
     }
+
+    public function scopePending($query)
+    {
+        return $query->whereNull('accepted_at');
+    }
+
 }
