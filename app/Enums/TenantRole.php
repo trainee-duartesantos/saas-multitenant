@@ -9,13 +9,13 @@ enum TenantRole: string
     case MEMBER = 'member';
     case VIEWER = 'viewer';
 
-    public function label(): string
+    public function isOwner(): bool
     {
-        return match ($this) {
-            self::OWNER => 'Owner',
-            self::ADMIN => 'Admin',
-            self::MEMBER => 'Member',
-            self::VIEWER => 'Viewer',
-        };
+        return $this === self::OWNER;
+    }
+
+    public function isMember(): bool
+    {
+        return $this === self::MEMBER;
     }
 }

@@ -27,4 +27,10 @@ class Tenant extends Model
             ->withTimestamps();
     }
 
+    public function invitations()
+    {
+        return $this->hasMany(TenantInvitation::class);
+    }
+
+
 }

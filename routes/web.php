@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TenantInvitationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,10 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
     Route::post('/tenant/switch', TenantSwitchController::class)
         ->name('tenant.switch');
+
+    Route::post('/tenant/invitations', [TenantInvitationController::class, 'store'])
+        ->name('tenant.invitations.store');
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

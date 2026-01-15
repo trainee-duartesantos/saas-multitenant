@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
                     'currentTenantRole' => currentTenantRole()?->value,
                 ];
             },
+            'csrf_token' => csrf_token(),
         ]);
     }
 }

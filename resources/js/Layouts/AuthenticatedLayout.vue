@@ -8,6 +8,7 @@ import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
 
 import { useTenantRole } from "@/composables/useTenantRole";
+import { Head } from "@inertiajs/vue3";
 
 const showingNavigationDropdown = ref(false);
 
@@ -27,6 +28,9 @@ function switchTenant(event) {
 </script>
 
 <template>
+    <Head>
+        <meta name="csrf-token" :content="$page.props.csrf_token" />
+    </Head>
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
         <nav class="border-b bg-white dark:bg-gray-800">
             <div class="mx-auto max-w-7xl px-4">
