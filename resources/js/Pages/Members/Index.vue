@@ -82,18 +82,18 @@ const transferOwnership = (userId) => {
                                 <option value="owner">owner</option>
                             </select>
                         </td>
+                        <td v-if="canManage" class="space-x-3">
+                            <button
+                                v-if="
+                                    currentUserRole === 'owner' &&
+                                    member.role !== 'owner'
+                                "
+                                @click="transferOwnership(member.id)"
+                                class="text-orange-600 hover:underline text-sm"
+                            >
+                                Tornar owner
+                            </button>
 
-                        <button
-                            v-if="
-                                currentUserRole === 'owner' &&
-                                member.role !== 'owner'
-                            "
-                            @click="transferOwnership(member.id)"
-                            class="text-orange-600 hover:underline text-sm"
-                        >
-                            Tornar owner
-                        </button>
-                        <td v-if="canManage">
                             <button
                                 v-if="
                                     member.id !== currentUserId &&

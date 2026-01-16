@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => EnsureTenant::class,
             'tenant.access' => \App\Http\Middleware\EnsureUserBelongsToTenant::class,
+            'tenant.onboarded' => \App\Http\Middleware\EnsureTenantOnboarded::class,
         ]);
     })
 

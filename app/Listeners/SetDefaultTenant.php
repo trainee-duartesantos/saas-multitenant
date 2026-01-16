@@ -9,6 +9,7 @@ class SetDefaultTenant
 {
     public function handle(Login $event): void
     {
+        logger('LOGIN EVENT DISPARADO');
         /** @var User $user */
         $user = $event->user;
 

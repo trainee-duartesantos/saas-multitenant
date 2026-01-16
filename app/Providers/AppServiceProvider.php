@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 use App\Models\User;
+use App\Models\Tenant;
+use App\Observers\TenantObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +37,6 @@ class AppServiceProvider extends ServiceProvider
                 ];
             },
         ]);
+        Tenant::observe(TenantObserver::class);
     }
 }

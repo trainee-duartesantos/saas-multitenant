@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Tenant extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'uuid',
         'name',
         'slug',
         'settings',
@@ -19,6 +19,18 @@ class Tenant extends Model
     protected $casts = [
         'settings' => 'array',
     ];
+
+    /**
+     * Gerar UUID automaticamente ao criar tenant
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Tenant $tenant) {
+            if (! $tenant->uuid) {
+                $tenant->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     public function users()
     {
@@ -32,5 +44,8 @@ class Tenant extends Model
         return $this->hasMany(TenantInvitation::class);
     }
 
-
+    public function onboarding()
+    {
+        return $this->hasOne(TenantOnboarding::class);
+    }
 }

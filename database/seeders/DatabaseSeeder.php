@@ -13,33 +13,22 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@tenant.com',
-            'password' => Hash::make('password'),
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'admin@tenant.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('password'),
+            ]
+        );
 
-        $tenantA = Tenant::create([
-            'uuid' => Str::uuid(),
-            'name' => 'Tenant Alpha',
-            'slug' => 'tenant-alpha',
-            'settings' => [],
-        ]);
+        $tenant = Tenant::firstOrCreate(
+            ['slug' => 'tenant-alpha'],
+            ['name' => 'Tenant Alpha']
+        );
 
-        $tenantB = Tenant::create([
-            'uuid' => Str::uuid(),
-            'name' => 'Tenant Beta',
-            'slug' => 'tenant-beta',
-            'settings' => [],
-        ]);
-
-        // 👇 LIGAÇÃO USER ↔ TENANT COM ROLE (FORMA CORRETA)
-        $tenantA->users()->attach($user->id, [
-            'role' => TenantRole::OWNER->value,
-        ]);
-
-        $tenantB->users()->attach($user->id, [
-            'role' => TenantRole::OWNER->value,
-        ]);
+        // Attach apenas se ainda não estiver ligado
+        if (! $user->tenants()->where('tenants.id', $tenant->id)->exists()) {
+            $user->tenants()->attach($tenant->id, ['role' => 'owner']);
+        }
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TenantInvitationController;
 use App\Http\Controllers\TenantInvitationAcceptController;
 use App\Http\Controllers\TenantMemberController;
+use App\Http\Controllers\TenantOnboardingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,19 +21,31 @@ Route::get('/', function () {
     ]);
 });
 
+// Página pública: mostrar convite
+Route::get('/invitations/{token}', [TenantInvitationAcceptController::class, 'show'])
+    ->name('tenant.invitations.show');
+
+// Ação: aceitar convite
+Route::post('/invitations/{token}/accept', [TenantInvitationAcceptController::class, 'accept'])
+    ->name('tenant.invitations.accept');
+
 Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
+
+    Route::get('/onboarding', [TenantOnboardingController::class, 'index'])
+        ->name('onboarding.index');
+
+    Route::post('/onboarding/tenant', [TenantOnboardingController::class, 'storeTenant'])
+        ->name('onboarding.tenant.store');
+});
+
+
+Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(function () {
 
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
     Route::resource('projects', ProjectController::class);
-
-    Route::post('/tenant/switch', TenantSwitchController::class)
-        ->name('tenant.switch');
-
-    Route::post('/tenant/invitations', [TenantInvitationController::class, 'store'])
-        ->name('tenant.invitations.store');
 
     Route::get('/members', [TenantMemberController::class, 'index'])
         ->name('tenant.members.index');
@@ -43,27 +56,25 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
     Route::delete('/members/{user}', [TenantMemberController::class, 'destroy'])
         ->name('tenant.members.destroy');
 
+    Route::post('/tenant/members/{user}/transfer-ownership', [TenantMemberController::class, 'transferOwnership'])
+        ->name('tenant.members.transferOwnership');
+
+    Route::post('/tenant/invitations', [TenantInvitationController::class, 'store'])
+        ->name('tenant.invitations.store');
+
     Route::delete('/tenant/invitations/{invitation}', [TenantInvitationController::class, 'destroy'])
         ->name('tenant.invitations.destroy');
 
     Route::post('/tenant/invitations/{invitation}/resend', [TenantInvitationController::class, 'resend'])
         ->name('tenant.invitations.resend');
 
-    Route::post('/tenant/members/{user}/transfer-ownership', [TenantMemberController::class, 'transferOwnership'])
-        ->name('tenant.members.transferOwnership');
-
+    Route::post('/tenant/switch', TenantSwitchController::class)
+        ->name('tenant.switch');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Página pública: mostrar convite
-Route::get('/invitations/{token}', [TenantInvitationAcceptController::class, 'show'])
-    ->name('tenant.invitations.show');
-
-// Ação: aceitar convite
-Route::post('/invitations/{token}/accept', [TenantInvitationAcceptController::class, 'accept'])
-    ->name('tenant.invitations.accept');
 
 require __DIR__.'/auth.php';
