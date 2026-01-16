@@ -3,23 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 
 class TenantOnboardingController extends Controller
 {
-    use AuthorizesRequests;
-
     public function index(Request $request)
-    {
-        $tenant = $request->attributes->get('tenant');
-
-        return inertia('Onboarding/Index', [
-            'onboarding' => $tenant->onboarding,
-        ]);
-    }
-
-    public function show(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
 
@@ -41,19 +29,29 @@ class TenantOnboardingController extends Controller
             'name' => $request->name,
         ]);
 
-        $onboarding = $tenant->onboarding;
-
-        $onboarding->update([
+        $tenant->onboarding->update([
             'current_step' => 'members',
         ]);
 
-        // Caso raro: já tem membros
+        // Se já houver membros, fecha logo
         if ($tenant->users()->count() > 1) {
-            $onboarding->update([
-                'completed' => true,
-            ]);
+            $tenant->onboarding->update(['completed' => true]);
+            return redirect()->route('dashboard');
         }
 
         return redirect()->route('onboarding.index');
+    }
+
+    public function complete(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        $tenant->onboarding->update([
+            'completed' => true,
+        ]);
+
+        return redirect(
+            $request->input('redirect', route('dashboard'))
+        );
     }
 }

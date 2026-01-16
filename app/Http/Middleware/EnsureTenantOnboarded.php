@@ -20,8 +20,10 @@ class EnsureTenantOnboarded
         $onboarding = $tenant->onboarding;
 
         if ($onboarding && ! $onboarding->completed) {
-            // Evita loop infinito
-            if (! $request->routeIs('onboarding.*')) {
+            if (
+                ! $request->routeIs('onboarding.*') &&
+                ! $request->routeIs('members.*')
+            ) {
                 return redirect()->route('onboarding.index');
             }
         }

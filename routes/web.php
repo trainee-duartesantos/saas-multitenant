@@ -36,6 +36,9 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
     Route::post('/onboarding/tenant', [TenantOnboardingController::class, 'storeTenant'])
         ->name('onboarding.tenant.store');
+
+    Route::post('/onboarding/complete', [TenantOnboardingController::class, 'complete'])
+        ->name('onboarding.complete');
 });
 
 

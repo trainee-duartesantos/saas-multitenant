@@ -65,9 +65,36 @@ const submit = () => {
             </button>
         </div>
 
-        <!-- PASSO SEGUINTE -->
-        <div v-else class="text-gray-500">
-            Próximo passo: convidar membros 👥
+        <!-- PASSO MEMBERS -->
+        <div
+            v-else-if="onboarding && onboarding.current_step === 'members'"
+            class="bg-white rounded-xl shadow p-6 space-y-4"
+        >
+            <h2 class="font-medium text-lg">Convidar membros</h2>
+
+            <p class="text-gray-600">
+                Pode convidar membros agora ou fazê-lo mais tarde.
+            </p>
+
+            <div class="flex gap-3">
+                <button
+                    @click="
+                        router.post(route('onboarding.complete'), {
+                            redirect: route('tenant.members.index'),
+                        })
+                    "
+                    class="bg-black text-white px-4 py-2 rounded"
+                >
+                    Convidar membros
+                </button>
+
+                <button
+                    @click="router.post(route('onboarding.complete'))"
+                    class="border px-4 py-2 rounded text-gray-600"
+                >
+                    Concluir onboarding
+                </button>
+            </div>
         </div>
     </div>
 </template>
