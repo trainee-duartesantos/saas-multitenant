@@ -21,9 +21,11 @@ const currentTenantId = computed(() => auth.value.currentTenantId);
 const { isOwner } = useTenantRole();
 
 function switchTenant(event) {
-    router.post(route("tenant.switch"), {
-        tenant_id: event.target.value,
-    });
+    router.post(
+        route("tenant.switch"),
+        { tenant_id: event.target.value },
+        { preserveScroll: true }
+    );
 }
 </script>
 
@@ -51,6 +53,19 @@ function switchTenant(event) {
                         <NavLink :href="route('projects.index')">
                             Projects
                         </NavLink>
+
+                        <div
+                            class="flex items-center gap-2 text-sm text-gray-500"
+                        >
+                            <span>Tenant:</span>
+                            <strong class="text-gray-900">
+                                {{
+                                    tenants.find(
+                                        (t) => t.id === currentTenantId
+                                    )?.name
+                                }}
+                            </strong>
+                        </div>
 
                         <!-- TENANT SELECTOR -->
                         <div v-if="tenants.length > 1" class="ms-4">
