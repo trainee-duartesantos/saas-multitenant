@@ -6,10 +6,25 @@ const props = defineProps({
     invitations: Array,
     currentUserId: Number,
     currentUserRole: String,
+    onboarding: Object, // 👈 importante
 });
 
+/**
+ * Onboarding — passo "members"
+ */
+const isOnboardingMembers =
+    props.onboarding &&
+    props.onboarding.current_step === "members" &&
+    !props.onboarding.completed;
+
+/**
+ * Permissões
+ */
 const canManage = ["owner", "admin"].includes(props.currentUserRole);
 
+/**
+ * Ações
+ */
 const updateRole = (userId, role) => {
     router.patch(route("tenant.members.update", userId), { role });
 };
@@ -40,6 +55,19 @@ const transferOwnership = (userId) => {
 <template>
     <div class="max-w-4xl mx-auto py-10 space-y-10">
         <h1 class="text-2xl font-semibold">Membros</h1>
+
+        <!-- 🟢 Onboarding Callout -->
+        <div
+            v-if="isOnboardingMembers"
+            class="rounded-lg border border-blue-200 bg-blue-50 p-4"
+        >
+            <p class="font-medium text-blue-900">
+                👥 Convida pelo menos um membro para continuar
+            </p>
+            <p class="text-sm text-blue-700">
+                O seu tenant precisa de mais alguém para ficar operacional.
+            </p>
+        </div>
 
         <!-- Lista de membros -->
         <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -82,6 +110,7 @@ const transferOwnership = (userId) => {
                                 <option value="owner">owner</option>
                             </select>
                         </td>
+
                         <td v-if="canManage" class="space-x-3">
                             <button
                                 v-if="
@@ -126,7 +155,7 @@ const transferOwnership = (userId) => {
                 >
                     <div>
                         <strong>{{ invite.email }}</strong>
-                        <span class="text-gray-500"> — {{ invite.role }}</span>
+                        <span class="text-gray-500"> — {{ invite.role }} </span>
                     </div>
 
                     <div v-if="canManage" class="flex gap-3">
