@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Tenant;
+use App\Models\Plan;
 use App\Enums\TenantRole;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
@@ -46,12 +47,16 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $freePlan = Plan::where('slug', 'free')->first();
+
         $tenant = Tenant::create([
-            'uuid' => Str::uuid(),
             'name' => $user->name . "'s Workspace",
             'slug' => Str::slug($user->name) . '-' . Str::random(5),
             'settings' => [],
+            'plan_id' => $freePlan->id,
+            'trial_ends_at' => now()->addDays(14),
         ]);
+
 
         $user->tenants()->attach($tenant->id, [
             'role' => TenantRole::OWNER->value,
