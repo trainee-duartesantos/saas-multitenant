@@ -29,6 +29,12 @@ const cancelInvite = (id) => {
         router.delete(route("tenant.invitations.destroy", id));
     }
 };
+
+const transferOwnership = (userId) => {
+    if (confirm("Tem a certeza? Irá deixar de ser owner e passar a admin.")) {
+        router.post(route("tenant.members.transferOwnership", userId));
+    }
+};
 </script>
 
 <template>
@@ -77,6 +83,16 @@ const cancelInvite = (id) => {
                             </select>
                         </td>
 
+                        <button
+                            v-if="
+                                currentUserRole === 'owner' &&
+                                member.role !== 'owner'
+                            "
+                            @click="transferOwnership(member.id)"
+                            class="text-orange-600 hover:underline text-sm"
+                        >
+                            Tornar owner
+                        </button>
                         <td v-if="canManage">
                             <button
                                 v-if="

@@ -57,4 +57,22 @@ class TenantPolicy
             true
         );
     }
+
+    public function transferOwnership(User $user, Tenant $tenant, User $newOwner): bool
+    {
+        // Só o owner atual pode transferir
+        if ($user->roleForTenant($tenant) !== 'owner') {
+            return false;
+        }
+
+        // Não pode transferir para si próprio
+        if ($user->id === $newOwner->id) {
+            return false;
+        }
+
+        // Novo owner tem de pertencer ao tenant
+        return $newOwner->tenants()
+            ->where('tenants.id', $tenant->id)
+            ->exists();
+    }
 }

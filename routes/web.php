@@ -49,6 +49,9 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
     Route::post('/tenant/invitations/{invitation}/resend', [TenantInvitationController::class, 'resend'])
         ->name('tenant.invitations.resend');
 
+    Route::post('/tenant/members/{user}/transfer-ownership', [TenantMemberController::class, 'transferOwnership'])
+        ->name('tenant.members.transferOwnership');
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
