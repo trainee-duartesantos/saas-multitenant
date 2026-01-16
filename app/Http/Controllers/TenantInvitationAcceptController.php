@@ -72,8 +72,52 @@ class TenantInvitationAcceptController extends Controller
         ]);
     }
 
+    /**
+     * Aceitar convite
+     */
     public function accept(Request $request, string $token)
     {
-        
+        $invitation = TenantInvitation::where('token', $token)->firstOrFail();
+
+        if ($invitation->isAccepted()) {
+            abort(410, 'Invitation already accepted.');
+        }
+
+        if (! $request->user()) {
+            session(['pending_invitation_token' => $token]);
+            return redirect()->route('login');
+        }
+
+        $user = $request->user();
+
+        if (strtolower($user->email) !== strtolower($invitation->email)) {
+            abort(403, 'This invitation was sent to another email address.');
+        }
+
+        DB::transaction(function () use ($user, $invitation) {
+            if (! $user->tenants()->where('tenants.id', $invitation->tenant_id)->exists()) {
+                $user->tenants()->attach($invitation->tenant_id, [
+                    'role' => $invitation->role,
+                ]);
+            }
+
+            $invitation->update([
+                'accepted_at' => now(),
+            ]);
+
+            // ✅ FECHAR ONBOARDING AQUI
+            $tenant = $invitation->tenant;
+
+            if ($tenant->onboarding && ! $tenant->onboarding->completed) {
+                $tenant->onboarding->update([
+                    'completed' => true,
+                ]);
+            }
+        });
+
+        session(['tenant_id' => $invitation->tenant_id]);
+        session()->forget('pending_invitation_token');
+
+        return redirect()->route('dashboard');
     }
 }

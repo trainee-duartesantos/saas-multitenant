@@ -36,6 +36,35 @@ class AppServiceProvider extends ServiceProvider
                     'currentTenantId' => session('tenant_id'),
                 ];
             },
+
+            'onboardingChecklist' => function () {
+                $user = auth()->user();
+                $tenantId = session('tenant_id');
+
+                if (! $user || ! $tenantId) {
+                    return null;
+                }
+
+                $tenant = $user->tenants()->find($tenantId);
+
+                if (! $tenant || ! $tenant->onboarding) {
+                    return null;
+                }
+
+                return [
+                    [
+                        'key' => 'tenant',
+                        'label' => 'Configurar tenant',
+                        'done' => true,
+                    ],
+                    [
+                        'key' => 'members',
+                        'label' => 'Convidar membros',
+                        'done' => $tenant->users()->count() > 1,
+                    ],
+                ];
+            },
+
         ]);
         Tenant::observe(TenantObserver::class);
     }

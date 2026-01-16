@@ -22,30 +22,37 @@ class TenantOnboardingController extends Controller
     public function show(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
-        $onboarding = $tenant->onboarding;
 
         return Inertia::render('Onboarding/Index', [
             'tenant' => $tenant,
-            'onboarding' => $onboarding,
+            'onboarding' => $tenant->onboarding,
         ]);
     }
 
     public function storeTenant(Request $request)
     {
-        $tenant = $request->attributes->get('tenant');
-
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
+
+        $tenant = $request->attributes->get('tenant');
 
         $tenant->update([
             'name' => $request->name,
         ]);
 
-        // Avança o wizard
-        $tenant->onboarding->update([
+        $onboarding = $tenant->onboarding;
+
+        $onboarding->update([
             'current_step' => 'members',
         ]);
+
+        // Caso raro: já tem membros
+        if ($tenant->users()->count() > 1) {
+            $onboarding->update([
+                'completed' => true,
+            ]);
+        }
 
         return redirect()->route('onboarding.index');
     }
