@@ -48,4 +48,13 @@ class TenantPolicy
             true
         );
     }
+
+    public function manageInvitations(User $user, Tenant $tenant): bool
+    {
+        return in_array(
+            $user->roleForTenant($tenant),
+            ['owner', 'admin'],
+            true
+        );
+    }
 }

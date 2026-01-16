@@ -19,6 +19,16 @@ const removeMember = (userId) => {
         router.delete(route("tenant.members.destroy", userId));
     }
 };
+
+const resendInvite = (id) => {
+    router.post(route("tenant.invitations.resend", id));
+};
+
+const cancelInvite = (id) => {
+    if (confirm("Cancelar este convite?")) {
+        router.delete(route("tenant.invitations.destroy", id));
+    }
+};
 </script>
 
 <template>
@@ -92,9 +102,32 @@ const removeMember = (userId) => {
                 Sem convites pendentes.
             </p>
 
-            <ul v-else class="text-sm text-gray-600 space-y-1">
-                <li v-for="invite in invitations" :key="invite.id">
-                    {{ invite.email }} — {{ invite.role }}
+            <ul v-else class="space-y-2">
+                <li
+                    v-for="invite in invitations"
+                    :key="invite.id"
+                    class="flex items-center justify-between bg-gray-50 rounded px-4 py-2 text-sm"
+                >
+                    <div>
+                        <strong>{{ invite.email }}</strong>
+                        <span class="text-gray-500"> — {{ invite.role }}</span>
+                    </div>
+
+                    <div v-if="canManage" class="flex gap-3">
+                        <button
+                            @click="resendInvite(invite.id)"
+                            class="text-blue-600 hover:underline"
+                        >
+                            Reenviar
+                        </button>
+
+                        <button
+                            @click="cancelInvite(invite.id)"
+                            class="text-red-600 hover:underline"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
                 </li>
             </ul>
         </div>

@@ -6,9 +6,12 @@ use App\Models\TenantInvitation;
 use App\Enums\TenantRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TenantInvitationController extends Controller
 {
+    use AuthorizesRequests;
+
     public function store(Request $request)
     {
         $request->validate([
@@ -33,6 +36,38 @@ class TenantInvitationController extends Controller
         return response()->json([
             'message' => 'Invitation sent.',
         ], 201);
+    }
 
+    public function destroy(Request $request, TenantInvitation $invitation)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        $this->authorize('manageInvitations', $tenant);
+
+        abort_unless(
+            $invitation->tenant_id === $tenant->id,
+            403
+        );
+
+        $invitation->delete();
+
+        return back()->with('success', 'Convite cancelado.');
+    }
+
+    public function resend(Request $request, TenantInvitation $invitation)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        $this->authorize('manageInvitations', $tenant);
+
+        abort_unless(
+            $invitation->tenant_id === $tenant->id,
+            403
+        );
+
+        // aqui depois podes ligar email real
+        // Mail::to($invitation->email)->send(...)
+
+        return back()->with('success', 'Convite reenviado.');
     }
 }

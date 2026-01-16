@@ -43,6 +43,12 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
     Route::delete('/members/{user}', [TenantMemberController::class, 'destroy'])
         ->name('tenant.members.destroy');
 
+    Route::delete('/tenant/invitations/{invitation}', [TenantInvitationController::class, 'destroy'])
+        ->name('tenant.invitations.destroy');
+
+    Route::post('/tenant/invitations/{invitation}/resend', [TenantInvitationController::class, 'resend'])
+        ->name('tenant.invitations.resend');
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
