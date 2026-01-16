@@ -10,13 +10,10 @@ class Plan extends Model
         'name',
         'slug',
         'price',
+        'is_active',
         'max_members',
         'max_projects',
-        'features',
-    ];
-
-    protected $casts = [
-        'features' => 'array',
+        'has_priority_support',
     ];
 
     public function tenants()
