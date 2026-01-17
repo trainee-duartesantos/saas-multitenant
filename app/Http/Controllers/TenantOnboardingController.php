@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Plan;
 
 class TenantOnboardingController extends Controller
 {
@@ -25,17 +26,30 @@ class TenantOnboardingController extends Controller
 
         $tenant = $request->attributes->get('tenant');
 
+        // Atualiza nome do tenant
         $tenant->update([
             'name' => $request->name,
         ]);
 
+        // 🟢 ATRIBUIR PLANO FREE + TRIAL (só se ainda não tiver)
+        if (! $tenant->plan_id) {
+            $freePlan = Plan::where('slug', 'free')->firstOrFail();
+
+            $tenant->update([
+                'plan_id' => $freePlan->id,
+                'trial_ends_at' => now()->addDays(14),
+            ]);
+        }
+
+        // Avançar onboarding
         $tenant->onboarding->update([
             'current_step' => 'members',
         ]);
 
-        // Se já houver membros, fecha logo
+        // Caso raro: já tem membros
         if ($tenant->users()->count() > 1) {
             $tenant->onboarding->update(['completed' => true]);
+
             return redirect()->route('dashboard');
         }
 
