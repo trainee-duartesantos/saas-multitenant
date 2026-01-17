@@ -10,6 +10,7 @@ use App\Http\Controllers\TenantOnboardingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 
 Route::get('/', function () {
@@ -44,8 +45,20 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(function () {
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
+    Route::get('/dashboard', function (Request $request) {
+        $tenant = $request->attributes->get('tenant');
+
+        return Inertia::render('Dashboard', [
+            'plan' => [
+                'name' => $tenant->plan?->name,
+                'slug' => $tenant->plan?->slug,
+                'price' => $tenant->plan?->price,
+            ],
+            'trial' => [
+                'active' => $tenant->onTrial(),
+                'ends_at' => $tenant->trial_ends_at,
+            ],
+        ]);
     })->name('dashboard');
 
     Route::resource('projects', ProjectController::class);
