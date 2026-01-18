@@ -1,5 +1,6 @@
 <script setup>
 import { router } from "@inertiajs/vue3";
+import { ref } from "vue";
 
 const props = defineProps({
     members: Array,
@@ -50,11 +51,59 @@ const transferOwnership = (userId) => {
         router.post(route("tenant.members.transferOwnership", userId));
     }
 };
+
+const inviteEmail = ref("");
+const inviteRole = ref("member");
+
+const sendInvite = () => {
+    router.post(
+        route("tenant.invitations.store"),
+        {
+            email: inviteEmail.value,
+            role: inviteRole.value,
+        },
+        {
+            onSuccess: () => {
+                inviteEmail.value = "";
+                inviteRole.value = "member";
+            },
+        }
+    );
+};
 </script>
 
 <template>
     <div class="max-w-4xl mx-auto py-10 space-y-10">
         <h1 class="text-2xl font-semibold">Membros</h1>
+
+        <!-- ➕ Convidar membro -->
+        <div v-if="canManage" class="bg-white rounded-xl shadow p-4 space-y-4">
+            <h2 class="font-semibold">Convidar membro</h2>
+
+            <div class="flex gap-3">
+                <input
+                    v-model="inviteEmail"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    class="border rounded px-3 py-2 text-sm w-full"
+                />
+
+                <select
+                    v-model="inviteRole"
+                    class="border rounded px-2 py-2 text-sm"
+                >
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                </select>
+
+                <button
+                    @click="sendInvite"
+                    class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                >
+                    Convidar
+                </button>
+            </div>
+        </div>
 
         <!-- 🟢 Onboarding Callout -->
         <div

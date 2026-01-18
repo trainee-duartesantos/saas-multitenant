@@ -14,6 +14,12 @@ class TenantInvitationController extends Controller
 
     public function store(Request $request)
     {
+        $tenant = $request->attributes->get('tenant');
+
+        if (! $tenant->canInviteMember()) {
+            return back()->with('error', 'O seu plano atingiu o limite de membros. Faça upgrade para convidar mais.');
+        }
+
         $request->validate([
             'email' => 'required|email',
             'role' => 'required|string',

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+use App\Models\TenantInvitation;
 
 class Tenant extends Model
 {
@@ -74,5 +75,45 @@ class Tenant extends Model
         }
 
         return $this->users()->count() < $this->plan->max_members;
+    }
+
+    public function pendingInvitations()
+    {
+        return $this->invitations()->whereNull('accepted_at');
+    }
+
+    /**
+     * Pode convidar novo membro?
+     * Conta membros atuais + convites pendentes.
+     */
+    public function canInviteMember(): bool
+    {
+        if (! $this->plan || $this->plan->max_members === null) {
+            return true;
+        }
+
+        $used = $this->users()->count() + $this->pendingInvitations()->count();
+
+        return $used < $this->plan->max_members;
+    }
+
+    /**
+     * Pode aceitar um convite específico?
+     * IMPORTANTE: ao aceitar, o convite deixa de ser pendente, então:
+     * contamos convites pendentes EXCLUINDO este convite.
+     */
+    public function canAcceptInvitation(TenantInvitation $invitation): bool
+    {
+        if (! $this->plan || $this->plan->max_members === null) {
+            return true;
+        }
+
+        $pendingExceptThis = $this->pendingInvitations()
+            ->where('id', '!=', $invitation->id)
+            ->count();
+
+        $usedAfterAccept = $this->users()->count() + $pendingExceptThis;
+
+        return $usedAfterAccept < $this->plan->max_members;
     }
 }

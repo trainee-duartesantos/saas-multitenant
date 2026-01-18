@@ -51,7 +51,12 @@ class HandleInertiaRequests extends Middleware
                     'currentTenantRole' => currentTenantRole()?->value,
                 ];
             },
+            'flash' => [
+                'error' => fn () => $request->session()->get('error'),
+                'success' => fn () => $request->session()->get('success'),
+            ],
             'csrf_token' => csrf_token(),
         ]);
+
     }
 }

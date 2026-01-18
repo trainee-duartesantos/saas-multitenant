@@ -8,48 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class TenantInvitationAcceptController extends Controller
 {
-    public function __invoke(Request $request, string $token)
-    {
-        // 1) convite válido
-        $invitation = TenantInvitation::where('token', $token)->firstOrFail();
-
-        if ($invitation->isAccepted()) {
-            abort(410, 'Invitation already accepted.');
-        }
-
-        // 2) precisa estar autenticado
-        if (! $request->user()) {
-            session(['pending_invitation_token' => $token]);
-            return redirect()->route('login');
-        }
-
-        $user = $request->user();
-
-        // 3) segurança: email tem de bater certo
-        if (strtolower($user->email) !== strtolower($invitation->email)) {
-            abort(403, 'This invitation was sent to another email address.');
-        }
-
-        // 4) operação atómica
-        DB::transaction(function () use ($user, $invitation) {
-            if (! $user->tenants()->where('tenants.id', $invitation->tenant_id)->exists()) {
-                $user->tenants()->attach($invitation->tenant_id, [
-                    'role' => $invitation->role,
-                ]);
-            }
-
-            $invitation->forceFill([
-                'accepted_at' => now(),
-            ])->save();
-        });
-
-        // 5) selecionar tenant ativo
-        session(['tenant_id' => $invitation->tenant_id]);
-        session()->forget('pending_invitation_token');
-
-        return redirect()->route('dashboard');
-    }
-
+    
     public function show(string $token)
     {
         $invitation = TenantInvitation::with('tenant')
@@ -92,6 +51,14 @@ class TenantInvitationAcceptController extends Controller
 
         if (strtolower($user->email) !== strtolower($invitation->email)) {
             abort(403, 'This invitation was sent to another email address.');
+        }
+
+        $tenant = $invitation->tenant;
+
+        if (! $tenant->canAcceptInvitation($invitation)) {
+            return redirect()
+                ->route('tenant.invitations.show', $token)
+                ->with('error', 'Este workspace já atingiu o limite de membros do plano atual.');
         }
 
         DB::transaction(function () use ($user, $invitation) {
