@@ -8,6 +8,7 @@ use App\Http\Controllers\TenantInvitationAcceptController;
 use App\Http\Controllers\TenantMemberController;
 use App\Http\Controllers\TenantOnboardingController;
 use App\Http\Controllers\PricingController;
+use App\Http\Controllers\BillingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -100,6 +101,12 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
     Route::get('/billing', function () {
         return redirect()->route('pricing.index');
     })->name('billing');
+
+    Route::post('/billing/checkout/{plan}', [BillingController::class, 'checkout'])
+        ->name('billing.checkout');
+
+    Route::get('/billing/success', [BillingController::class, 'success'])
+        ->name('billing.success');
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

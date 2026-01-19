@@ -132,4 +132,10 @@ class Tenant extends Model
 
         return $this->projects()->count() < $this->plan->max_projects;
     }
+
+    public function getForeignKey()
+    {
+        return 'tenant_id';
+    }
+
 }

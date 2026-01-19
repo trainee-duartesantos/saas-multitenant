@@ -20,6 +20,7 @@ class PlanSeeder extends Seeder
                 'billing_access' => false,
                 'advanced_permissions' => false,
                 'has_priority_support' => false,
+                'stripe_price_id' => null,
             ]
         );
 
@@ -33,6 +34,7 @@ class PlanSeeder extends Seeder
                 'billing_access' => true,
                 'advanced_permissions' => true,
                 'has_priority_support' => false,
+                'stripe_price_id' => 'price_1SrKeP6sG72TAVnWpsgiTcCx',
             ]
         );
 
@@ -48,6 +50,7 @@ class PlanSeeder extends Seeder
                 'billing_access' => true,
                 'advanced_permissions' => true,
                 'has_priority_support' => true,
+                'stripe_price_id' => 'price_1SrKgu6sG72TAVnW28JBmIDI',
             ]
         );
     }

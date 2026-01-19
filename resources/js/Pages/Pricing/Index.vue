@@ -1,16 +1,15 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
+import axios from "axios";
 
 defineProps({
     plans: Array,
     currentPlanId: Number,
 });
 
-function upgrade(plan) {
-    if (!confirm(`Upgrade para o plano ${plan.name}?`)) return;
-
-    router.post(route("pricing.upgrade", plan.slug));
+function upgrade(planId) {
+    router.post(route("billing.checkout", planId));
 }
 </script>
 
@@ -50,9 +49,9 @@ function upgrade(plan) {
                     </ul>
 
                     <button
-                        v-if="plan.id !== currentPlanId"
-                        @click="upgrade(plan)"
-                        class="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
+                        v-if="plan.id !== currentPlanId && plan.stripe_price_id"
+                        @click="upgrade(plan.id)"
+                        class="btn-primary"
                     >
                         Upgrade
                     </button>
