@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Models\User;
+
 
 class HandleInertiaRequests extends Middleware
 {
@@ -31,12 +31,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            'auth' => function () {
+            'auth' => function () use ($request) {
 
                 /** @var \App\Models\User|null $user */
-                $user = request()->user()?->load('tenants');
+                $user = $request->user()?->load('tenants');
 
-                if ($user && !session()->has('tenant_id')) {
+                if ($user && ! session()->has('tenant_id')) {
                     session(['tenant_id' => $user->tenants->first()?->id]);
                 }
 
@@ -47,16 +47,16 @@ class HandleInertiaRequests extends Middleware
                         'name' => $tenant->name,
                     ])->values(),
                     'currentTenantId' => session('tenant_id'),
-
                     'currentTenantRole' => currentTenantRole()?->value,
                 ];
             },
+
             'flash' => [
-                'error' => fn () => $request->session()->get('error'),
                 'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
             ],
+
             'csrf_token' => csrf_token(),
         ]);
-
     }
 }

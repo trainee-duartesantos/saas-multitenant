@@ -28,16 +28,28 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Project::class);
+        $tenant = $request->attributes->get('tenant');
 
-        Project::create(
-            $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-            ])
-        );
+        if (! $tenant->canCreateProject()) {
+            return back()->with(
+                'error',
+                'O seu plano atingiu o limite de projetos. Faça upgrade para criar mais.'
+            );
+        }
 
-        return redirect()->back();
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $tenant->projects()->create([
+            'name' => $request->name,
+        ]);
+
+        return redirect()
+            ->route('projects.index')
+            ->with('success', 'Projeto criado com sucesso.');
     }
+
 
     /**
      * Apagar projeto

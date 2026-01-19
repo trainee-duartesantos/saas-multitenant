@@ -24,12 +24,8 @@ function createProject() {
             <h1 class="text-xl font-bold mb-4">Projects</h1>
 
             <!-- Botão só para owner -->
-            <button
-                v-if="isOwner"
-                @click="createProject"
-                class="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-            >
-                ➕ Criar Projeto
+            <button @click="createProject" class="btn-primary">
+                Criar projeto
             </button>
 
             <ul>

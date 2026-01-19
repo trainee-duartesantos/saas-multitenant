@@ -17,6 +17,8 @@ const page = usePage();
 const auth = computed(() => page.props.auth ?? {});
 const tenants = computed(() => auth.value.tenants ?? []);
 const currentTenantId = computed(() => auth.value.currentTenantId);
+const success = computed(() => page.props.flash?.success);
+const error = computed(() => page.props.flash?.error);
 
 const { isOwner } = useTenantRole();
 
@@ -24,7 +26,7 @@ function switchTenant(event) {
     router.post(
         route("tenant.switch"),
         { tenant_id: event.target.value },
-        { preserveScroll: true }
+        { preserveScroll: true, preserveState: false }
     );
 }
 </script>
@@ -33,6 +35,22 @@ function switchTenant(event) {
     <Head>
         <meta name="csrf-token" :content="$page.props.csrf_token" />
     </Head>
+    <div class="max-w-7xl mx-auto px-6 pt-4 space-y-2">
+        <div
+            v-if="success"
+            class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm"
+        >
+            ✅ {{ success }}
+        </div>
+
+        <div
+            v-if="error"
+            class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm"
+        >
+            ❌ {{ error }}
+        </div>
+    </div>
+
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
         <nav class="border-b bg-white dark:bg-gray-800">
             <div class="mx-auto max-w-7xl px-4">

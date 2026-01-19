@@ -116,4 +116,19 @@ class Tenant extends Model
 
         return $usedAfterAccept < $this->plan->max_members;
     }
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function canCreateProject(): bool
+    {
+        // sem plano ou plano ilimitado
+        if (! $this->plan || $this->plan->max_projects === null) {
+            return true;
+        }
+
+        return $this->projects()->count() < $this->plan->max_projects;
+    }
 }
