@@ -32,6 +32,15 @@ class TenantInvitationController extends Controller
             403
         );
 
+        if (
+            TenantInvitation::where('tenant_id', $tenantId)
+                ->where('email', $request->email)
+                ->whereNull('accepted_at')
+                ->exists()
+        ) {
+            return back()->with('error', 'Este email já tem um convite pendente.');
+        }
+
         TenantInvitation::create([
             'tenant_id' => $tenantId,
             'email' => $request->email,
@@ -39,9 +48,7 @@ class TenantInvitationController extends Controller
             'token' => Str::uuid(),
         ]);
 
-        return response()->json([
-            'message' => 'Invitation sent.',
-        ], 201);
+        return redirect()->back()->with('success', 'Convite enviado.');
     }
 
     public function destroy(Request $request, TenantInvitation $invitation)

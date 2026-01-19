@@ -37,7 +37,14 @@ class TenantPolicy
         }
 
         // Não pode remover o OWNER
-        if ($targetUser->hasRole(TenantRole::OWNER, $tenant)) {
+        $targetRole = $tenant
+            ->users()
+            ->where('users.id', $targetUser->id)
+            ->first()
+            ?->pivot
+            ?->role;
+
+        if ($targetRole === TenantRole::OWNER->value) {
             return false;
         }
 
