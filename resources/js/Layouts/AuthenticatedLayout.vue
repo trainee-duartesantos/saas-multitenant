@@ -74,6 +74,10 @@ function switchTenant(event) {
                             Projects
                         </NavLink>
 
+                        <NavLink :href="route('pricing.index')">
+                            Pricing
+                        </NavLink>
+
                         <div
                             class="flex items-center gap-2 text-sm text-gray-500"
                         >

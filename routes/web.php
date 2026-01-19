@@ -7,6 +7,7 @@ use App\Http\Controllers\TenantInvitationController;
 use App\Http\Controllers\TenantInvitationAcceptController;
 use App\Http\Controllers\TenantMemberController;
 use App\Http\Controllers\TenantOnboardingController;
+use App\Http\Controllers\PricingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -40,6 +41,12 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
     Route::post('/onboarding/complete', [TenantOnboardingController::class, 'complete'])
         ->name('onboarding.complete');
+
+    Route::get('/pricing', [PricingController::class, 'index'])
+        ->name('pricing.index');
+
+    Route::post('/pricing/upgrade/{plan:slug}', [PricingController::class, 'upgrade'])
+        ->name('pricing.upgrade');
 });
 
 
