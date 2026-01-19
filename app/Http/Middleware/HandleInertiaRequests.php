@@ -5,51 +5,61 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
-
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that is loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determine the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
+        /** @var \App\Models\User|null $user */
+        $user = $request->user()?->load('tenants');
+
+        if ($user && ! session()->has('tenant_id')) {
+            session(['tenant_id' => $user->tenants->first()?->id]);
+        }
+
+        $currentTenant = null;
+
+        if ($user && session()->has('tenant_id')) {
+            $currentTenant = $user->tenants()
+                ->with('plan')
+                ->find(session('tenant_id'));
+        }
+
         return array_merge(parent::share($request), [
-            'auth' => function () use ($request) {
+            'auth' => [
+                'user' => $user,
+                'tenants' => $user?->tenants->map(fn ($tenant) => [
+                    'id' => $tenant->id,
+                    'name' => $tenant->name,
+                ])->values(),
 
-                /** @var \App\Models\User|null $user */
-                $user = $request->user()?->load('tenants');
+                'currentTenantId' => session('tenant_id'),
+                'currentTenantRole' => currentTenantRole()?->value,
 
-                if ($user && ! session()->has('tenant_id')) {
-                    session(['tenant_id' => $user->tenants->first()?->id]);
-                }
-
-                return [
-                    'user' => $user,
-                    'tenants' => $user?->tenants->map(fn ($tenant) => [
-                        'id' => $tenant->id,
-                        'name' => $tenant->name,
-                    ])->values(),
-                    'currentTenantId' => session('tenant_id'),
-                    'currentTenantRole' => currentTenantRole()?->value,
-                ];
-            },
+                'currentTenant' => $currentTenant ? [
+                    'id' => $currentTenant->id,
+                    'name' => $currentTenant->name,
+                    'plan' => $currentTenant->plan ? [
+                        'slug' => $currentTenant->plan->slug,
+                        'name' => $currentTenant->plan->name,
+                        'features' => [
+                            'billing_access' => (bool) $currentTenant->plan->billing_access,
+                            'advanced_permissions' => (bool) $currentTenant->plan->advanced_permissions,
+                            'has_priority_support' => (bool) $currentTenant->plan->has_priority_support,
+                        ],
+                        'limits' => [
+                            'max_members' => $currentTenant->plan->max_members,
+                            'max_projects' => $currentTenant->plan->max_projects,
+                        ],
+                    ] : null,
+                ] : null,
+            ],
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

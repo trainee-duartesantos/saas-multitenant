@@ -21,6 +21,8 @@ const success = computed(() => page.props.flash?.success);
 const error = computed(() => page.props.flash?.error);
 
 const { isOwner } = useTenantRole();
+const tenant = computed(() => auth.value.currentTenant);
+const canBilling = computed(() => tenant.value?.plan?.features?.billing_access);
 
 function switchTenant(event) {
     router.post(
@@ -116,7 +118,10 @@ function switchTenant(event) {
                                 Profile
                             </DropdownLink>
 
-                            <DropdownLink v-if="isOwner" href="/billing">
+                            <DropdownLink
+                                v-if="isOwner && canBilling"
+                                href="/billing"
+                            >
                                 Billing
                             </DropdownLink>
 

@@ -87,6 +87,15 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
     Route::post('/tenant/switch', TenantSwitchController::class)
         ->name('tenant.switch');
 
+    /*
+    | 💳 BILLING (feature-based)
+    */
+    Route::get('/billing', function () {
+        return Inertia::render('Billing/Index');
+    })
+        ->middleware('feature:billing_access')
+        ->name('billing.index');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

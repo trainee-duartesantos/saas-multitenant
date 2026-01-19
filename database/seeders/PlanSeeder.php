@@ -10,29 +10,45 @@ class PlanSeeder extends Seeder
 {
     public function run()
     {
-        Plan::create([
-            'name' => 'Free',
-            'slug' => 'free',
-            'price' => 0,
-            'max_members' => 1,
-            'max_projects' => 1,
-        ]);
+        Plan::updateOrCreate(
+            ['slug' => 'free'],
+            [
+                'name' => 'Free',
+                'price' => 0,
+                'max_members' => 1,
+                'max_projects' => 1,
+                'billing_access' => false,
+                'advanced_permissions' => false,
+                'has_priority_support' => false,
+            ]
+        );
 
-        Plan::create([
-            'name' => 'Pro',
-            'slug' => 'pro',
-            'price' => 1500,
-            'max_members' => 5,
-            'max_projects' => 10,
-        ]);
+        Plan::updateOrCreate(
+            ['slug' => 'pro'],
+            [
+                'name' => 'Pro',
+                'price' => 1500,
+                'max_members' => 5,
+                'max_projects' => 10,
+                'billing_access' => true,
+                'advanced_permissions' => true,
+                'has_priority_support' => false,
+            ]
+        );
 
-        Plan::create([
-            'name' => 'Enterprise',
-            'slug' => 'enterprise',
-            'price' => 5000,
-            'max_members' => null,
-            'max_projects' => null,
-            'has_priority_support' => true,
-        ]);
+
+        Plan::updateOrCreate(
+            ['slug' => 'enterprise'],
+            [
+                'name' => 'Enterprise',
+                'slug' => 'enterprise',
+                'price' => 5000,
+                'max_members' => null,
+                'max_projects' => null,
+                'billing_access' => true,
+                'advanced_permissions' => true,
+                'has_priority_support' => true,
+            ]
+        );
     }
 }

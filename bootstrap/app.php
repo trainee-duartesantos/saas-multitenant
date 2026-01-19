@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureTenant;
+use App\Http\Middleware\EnsureTenantFeature;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant' => EnsureTenant::class,
+            'feature' => EnsureTenantFeature::class,
             'tenant.access' => \App\Http\Middleware\EnsureUserBelongsToTenant::class,
             'tenant.onboarded' => \App\Http\Middleware\EnsureTenantOnboarded::class,
         ]);

@@ -14,6 +14,8 @@ class Plan extends Model
         'max_members',
         'max_projects',
         'has_priority_support',
+        'billing_access',
+        'advanced_permissions',
     ];
 
     public function tenants()
