@@ -98,10 +98,9 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
     | 💳 BILLING (feature-based)
     */
     Route::get('/billing', function () {
-        return Inertia::render('Billing/Index');
-    })
-        ->middleware('feature:billing_access')
-        ->name('billing.index');
+        return redirect()->route('pricing.index');
+    })->name('billing');
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

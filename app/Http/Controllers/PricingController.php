@@ -13,8 +13,8 @@ class PricingController extends Controller
         $tenant = $request->attributes->get('tenant');
 
         return Inertia::render('Pricing/Index', [
-            'plans' => Plan::where('is_active', true)->get(),
-            'currentPlanId' => $tenant->plan_id,
+            'plans' => Plan::all(),
+            'currentPlan' => $tenant->plan?->slug,
         ]);
     }
 
