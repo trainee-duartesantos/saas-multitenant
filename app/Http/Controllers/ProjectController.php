@@ -14,12 +14,14 @@ class ProjectController extends Controller
     /**
      * Lista projetos do tenant atual
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Project::class);
+        $tenant = $request->attributes->get('tenant');
 
         return Inertia::render('Projects/Index', [
             'projects' => Project::all(),
+            'canCreateProject' => $tenant->canCreateProject(),
         ]);
     }
 
