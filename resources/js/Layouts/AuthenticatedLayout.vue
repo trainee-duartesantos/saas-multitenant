@@ -78,6 +78,10 @@ function switchTenant(event) {
                             Pricing
                         </NavLink>
 
+                        <NavLink :href="route('billing.history')">
+                            Billing history
+                        </NavLink>
+
                         <div
                             class="flex items-center gap-2 text-sm text-gray-500"
                         >

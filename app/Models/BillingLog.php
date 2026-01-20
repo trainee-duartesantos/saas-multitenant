@@ -18,4 +18,20 @@ class BillingLog extends Model
     protected $casts = [
         'metadata' => 'array',
     ];
+
+    public function plan()
+    {
+        return $this->belongsTo(\App\Models\Plan::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
+
 }

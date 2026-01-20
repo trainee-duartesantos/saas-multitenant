@@ -10,6 +10,7 @@ use App\Http\Controllers\TenantOnboardingController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\BillingHistoryController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -110,6 +111,9 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
 
     Route::get('/billing/success', [BillingController::class, 'success'])
         ->name('billing.success');
+
+    Route::get('/billing/history', [BillingHistoryController::class, 'index'])
+        ->name('billing.history');
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
