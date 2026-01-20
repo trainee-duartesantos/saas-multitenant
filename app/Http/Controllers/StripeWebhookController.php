@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
+use App\Models\BillingLog;
 
 class StripeWebhookController extends Controller
 {
@@ -12,7 +13,7 @@ class StripeWebhookController extends Controller
     {
         $payload = $request->getContent();
         $signature = $request->header('Stripe-Signature');
-        $secret = config('cashier.webhook.secret');
+        $secret = config('services.stripe.webhook_secret');
 
         try {
             $event = Webhook::constructEvent(
@@ -40,9 +41,6 @@ class StripeWebhookController extends Controller
         $planId = $session->metadata->plan_id ?? null;
 
         if (! $tenantId || ! $planId) {
-            \Log::warning('Checkout completed without metadata', [
-                'session_id' => $session->id,
-            ]);
             return;
         }
 
@@ -50,20 +48,24 @@ class StripeWebhookController extends Controller
         $plan = \App\Models\Plan::find($planId);
 
         if (! $tenant || ! $plan) {
-            \Log::warning('Tenant or Plan not found', compact('tenantId', 'planId'));
             return;
         }
 
         $tenant->update([
             'plan_id' => $plan->id,
-            'stripe_subscription_id' => $session->subscription,
             'trial_ends_at' => null,
         ]);
 
-        \Log::info('Tenant upgraded successfully', [
+        BillingLog::create([
             'tenant_id' => $tenant->id,
-            'plan' => $plan->slug,
+            'user_id' => null, // webhook
+            'plan_id' => $plan->id,
+            'action' => 'subscription_created',
+            'stripe_subscription_id' => $session->subscription,
+            'metadata' => [
+                'checkout_session_id' => $session->id,
+                'payment_status' => $session->payment_status,
+            ],
         ]);
     }
-
 }
