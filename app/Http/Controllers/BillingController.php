@@ -20,11 +20,15 @@ class BillingController extends Controller
             ->checkout([
                 'success_url' => route('billing.success'),
                 'cancel_url' => route('pricing.index'),
+                'metadata' => [
+                    'tenant_id' => $tenant->id,
+                    'plan_id' => $plan->id,
+                ],
             ]);
 
-        // ✅ REDIRECT CORRETO PARA STRIPE
         return Inertia::location($checkout->url);
     }
+
 
     public function success(Request $request)
     {

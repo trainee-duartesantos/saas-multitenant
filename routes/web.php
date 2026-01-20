@@ -9,10 +9,14 @@ use App\Http\Controllers\TenantMemberController;
 use App\Http\Controllers\TenantOnboardingController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->withoutMiddleware(['web']);
 
 
 Route::get('/', function () {
@@ -49,7 +53,6 @@ Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
     Route::post('/pricing/upgrade/{plan:slug}', [PricingController::class, 'upgrade'])
         ->name('pricing.upgrade');
 });
-
 
 Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(function () {
 
