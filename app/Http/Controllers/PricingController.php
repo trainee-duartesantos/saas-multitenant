@@ -25,6 +25,8 @@ class PricingController extends Controller
 
         return Inertia::render('Pricing/Index', [
             'plans' => $plans,
+            'currentPlanId' => $tenant->plan_id,
+            'canUpgrade' => $request->user()->isOwnerOfTenant($tenant->id),
         ]);
     }
 }

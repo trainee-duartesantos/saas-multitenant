@@ -62,4 +62,11 @@ class User extends Authenticatable
             ?->role;
     }
 
+    public function isOwnerOfTenant(int $tenantId): bool
+    {
+        return $this->tenants()
+            ->where('tenant_id', $tenantId)
+            ->wherePivot('role', 'owner')
+            ->exists();
+    }
 }

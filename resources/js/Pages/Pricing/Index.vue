@@ -4,6 +4,8 @@ import { Head, router } from "@inertiajs/vue3";
 
 defineProps({
     plans: Array,
+    currentPlanId: Number,
+    canUpgrade: Boolean,
 });
 
 function upgrade(planId) {
@@ -35,8 +37,12 @@ function upgrade(planId) {
                     </p>
 
                     <ul class="text-sm text-gray-600 space-y-1">
-                        <li>👥 {{ plan.max_members ?? "Ilimitado" }} membros</li>
-                        <li>📁 {{ plan.max_projects ?? "Ilimitado" }} projetos</li>
+                        <li>
+                            👥 {{ plan.max_members ?? "Ilimitado" }} membros
+                        </li>
+                        <li>
+                            📁 {{ plan.max_projects ?? "Ilimitado" }} projetos
+                        </li>
                         <li v-if="plan.has_priority_support">
                             ⭐ Priority support
                         </li>
@@ -44,7 +50,11 @@ function upgrade(planId) {
 
                     <!-- 🔥 LÓGICA CORRETA -->
                     <button
-                        v-if="!plan.is_current && plan.stripe_price_id"
+                        v-if="
+                            canUpgrade &&
+                            plan.id !== currentPlanId &&
+                            plan.stripe_price_id
+                        "
                         @click="upgrade(plan.id)"
                         class="btn-primary"
                     >
@@ -52,10 +62,17 @@ function upgrade(planId) {
                     </button>
 
                     <span
-                        v-else-if="plan.is_current"
+                        v-else-if="plan.id === currentPlanId"
                         class="block text-center text-sm text-green-600 font-medium"
                     >
                         Plano atual
+                    </span>
+
+                    <span
+                        v-else-if="!canUpgrade"
+                        class="block text-center text-sm text-gray-400"
+                    >
+                        Apenas o owner pode alterar o plano
                     </span>
                 </div>
             </div>

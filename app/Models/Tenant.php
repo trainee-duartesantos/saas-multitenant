@@ -138,4 +138,12 @@ class Tenant extends Model
         return 'tenant_id';
     }
 
+    public function isOwnerOfTenant(int $tenantId): bool
+    {
+        return $this->tenants()
+            ->where('tenant_id', $tenantId)
+            ->wherePivot('role', 'owner')
+            ->exists();
+    }
+
 }

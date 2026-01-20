@@ -12,6 +12,14 @@ class BillingController extends Controller
     public function checkout(Request $request, Plan $plan)
     {
         $tenant = $request->attributes->get('tenant');
+        $user = $request->user();
+
+        // 🔒 Só o Owner pode fazer upgrade
+        abort_unless(
+            $user->isOwnerOfTenant($tenant->id),
+            403,
+            'Apenas o owner pode alterar o plano.'
+        );
 
         abort_unless($plan->stripe_price_id, 403, 'Plano não subscritível');
 
@@ -28,7 +36,6 @@ class BillingController extends Controller
 
         return Inertia::location($checkout->url);
     }
-
 
     public function success(Request $request)
     {
