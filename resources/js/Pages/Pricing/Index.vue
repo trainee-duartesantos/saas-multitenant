@@ -1,11 +1,9 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
-import axios from "axios";
 
 defineProps({
     plans: Array,
-    currentPlanId: Number,
 });
 
 function upgrade(planId) {
@@ -37,19 +35,16 @@ function upgrade(planId) {
                     </p>
 
                     <ul class="text-sm text-gray-600 space-y-1">
-                        <li>
-                            👥 {{ plan.max_members ?? "Ilimitado" }} membros
-                        </li>
-                        <li>
-                            📁 {{ plan.max_projects ?? "Ilimitado" }} projetos
-                        </li>
+                        <li>👥 {{ plan.max_members ?? "Ilimitado" }} membros</li>
+                        <li>📁 {{ plan.max_projects ?? "Ilimitado" }} projetos</li>
                         <li v-if="plan.has_priority_support">
                             ⭐ Priority support
                         </li>
                     </ul>
 
+                    <!-- 🔥 LÓGICA CORRETA -->
                     <button
-                        v-if="plan.id !== currentPlanId && plan.stripe_price_id"
+                        v-if="!plan.is_current && plan.stripe_price_id"
                         @click="upgrade(plan.id)"
                         class="btn-primary"
                     >
@@ -57,7 +52,7 @@ function upgrade(planId) {
                     </button>
 
                     <span
-                        v-else
+                        v-else-if="plan.is_current"
                         class="block text-center text-sm text-green-600 font-medium"
                     >
                         Plano atual

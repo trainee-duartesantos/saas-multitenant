@@ -12,27 +12,19 @@ class PricingController extends Controller
     {
         $tenant = $request->attributes->get('tenant');
 
+        $plans = Plan::all()->map(fn ($plan) => [
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'price' => $plan->price,
+            'max_members' => $plan->max_members,
+            'max_projects' => $plan->max_projects,
+            'has_priority_support' => $plan->has_priority_support,
+            'stripe_price_id' => $plan->stripe_price_id,
+            'is_current' => $tenant->plan_id === $plan->id,
+        ]);
+
         return Inertia::render('Pricing/Index', [
-            'plans' => Plan::all(),
-            'currentPlan' => $tenant->plan?->slug,
+            'plans' => $plans,
         ]);
-    }
-
-    public function upgrade(Request $request, Plan $plan)
-    {
-        $tenant = $request->attributes->get('tenant');
-
-        if ($tenant->plan_id === $plan->id) {
-            return back()->with('error', 'Este já é o seu plano atual.');
-        }
-
-        $tenant->update([
-            'plan_id' => $plan->id,
-            'trial_ends_at' => null,
-        ]);
-
-        return redirect()
-            ->route('dashboard')
-            ->with('success', "Plano atualizado para {$plan->name}.");
     }
 }
