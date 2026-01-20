@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use App\Models\TenantInvitation;
 use Laravel\Cashier\Billable;
+use Laravel\Cashier\Subscription;
 
 class Tenant extends Model
 {
@@ -146,4 +147,11 @@ class Tenant extends Model
             ->exists();
     }
 
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->whereIn('stripe_status', ['active', 'trialing'])
+            ->latest()
+            ->first();
+    }
 }
