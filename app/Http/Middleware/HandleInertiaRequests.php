@@ -27,7 +27,11 @@ class HandleInertiaRequests extends Middleware
 
         if ($user && session()->has('tenant_id')) {
             $currentTenant = $user->tenants()
-                ->with('plan')
+                ->with([
+                    'plan',
+                    'users:id',
+                    'invitations' => fn ($q) => $q->whereNull('accepted_at'),
+                ])
                 ->find(session('tenant_id'));
         }
 
@@ -45,6 +49,13 @@ class HandleInertiaRequests extends Middleware
                 'currentTenant' => $currentTenant ? [
                     'id' => $currentTenant->id,
                     'name' => $currentTenant->name,
+
+                    'usage' => [
+                        'members' =>
+                            ($currentTenant->users->count() ?? 0)
+                            + ($currentTenant->invitations->count() ?? 0),
+                    ],
+
                     'plan' => $currentTenant->plan ? [
                         'slug' => $currentTenant->plan->slug,
                         'name' => $currentTenant->plan->name,
@@ -59,6 +70,7 @@ class HandleInertiaRequests extends Middleware
                         ],
                     ] : null,
                 ] : null,
+
             ],
 
             'pendingInvitationsCount' => fn () =>

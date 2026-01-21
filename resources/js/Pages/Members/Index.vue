@@ -1,6 +1,20 @@
 <script setup>
 import { router } from "@inertiajs/vue3";
 import { ref } from "vue";
+import { computed } from "vue";
+import { usePage } from "@inertiajs/vue3";
+
+const page = usePage();
+
+const tenant = computed(() => page.props.auth.currentTenant);
+
+const maxMembers = computed(() => tenant.value?.plan?.limits?.max_members);
+const usedMembers = computed(() => tenant.value?.usage?.members ?? 0);
+
+const canInvite = computed(() => {
+    if (maxMembers.value === null) return true;
+    return usedMembers.value < maxMembers.value;
+});
 
 const props = defineProps({
     members: Array,
@@ -56,6 +70,8 @@ const inviteEmail = ref("");
 const inviteRole = ref("member");
 
 const sendInvite = () => {
+    if (!canInvite.value) return;
+
     router.post(
         route("tenant.invitations.store"),
         {
@@ -98,11 +114,23 @@ const sendInvite = () => {
 
                 <button
                     @click="sendInvite"
-                    class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                    :disabled="!canInvite"
+                    class="px-4 py-2 rounded text-sm text-white"
+                    :class="
+                        canInvite
+                            ? 'bg-blue-600 hover:bg-blue-700'
+                            : 'bg-gray-400 cursor-not-allowed'
+                    "
                 >
                     Convidar
                 </button>
             </div>
+            <p v-if="!canInvite" class="text-sm text-red-600 mt-2">
+                🚫 Limite de membros do plano atingido
+                <span v-if="maxMembers !== null">
+                    ({{ usedMembers }}/{{ maxMembers }})
+                </span>
+            </p>
         </div>
 
         <!-- 🟢 Onboarding Callout -->

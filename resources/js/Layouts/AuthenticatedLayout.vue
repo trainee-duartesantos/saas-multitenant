@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { usePage, router, Link, Head } from "@inertiajs/vue3";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import Dropdown from "@/Components/Dropdown.vue";
@@ -21,6 +21,9 @@ const { isOwner } = useTenantRole();
 const tenant = computed(() => auth.value.currentTenant);
 const canBilling = computed(() => tenant.value?.plan?.features?.billing_access);
 
+const toastSuccess = ref(null);
+const toastError = ref(null);
+
 function switchTenant(event) {
     router.post(
         route("tenant.switch"),
@@ -28,6 +31,32 @@ function switchTenant(event) {
         { preserveScroll: true, preserveState: false }
     );
 }
+
+watch(
+    () => page.props.flash?.success,
+    (value) => {
+        if (value) {
+            toastSuccess.value = value;
+            setTimeout(() => {
+                toastSuccess.value = null;
+            }, 3000);
+        }
+    },
+    { immediate: true }
+);
+
+watch(
+    () => page.props.flash?.error,
+    (value) => {
+        if (value) {
+            toastError.value = value;
+            setTimeout(() => {
+                toastError.value = null;
+            }, 4000);
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
@@ -35,19 +64,23 @@ function switchTenant(event) {
         <meta name="csrf-token" :content="$page.props.csrf_token" />
     </Head>
     <div class="max-w-7xl mx-auto px-6 pt-4 space-y-2">
-        <div
-            v-if="success"
-            class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm"
-        >
-            ✅ {{ success }}
-        </div>
+        <transition name="fade">
+            <div
+                v-if="toastSuccess"
+                class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm"
+            >
+                ✅ {{ toastSuccess }}
+            </div>
+        </transition>
 
-        <div
-            v-if="error"
-            class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm"
-        >
-            ❌ {{ error }}
-        </div>
+        <transition name="fade">
+            <div
+                v-if="toastError"
+                class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm"
+            >
+                ❌ {{ toastError }}
+            </div>
+        </transition>
     </div>
 
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">

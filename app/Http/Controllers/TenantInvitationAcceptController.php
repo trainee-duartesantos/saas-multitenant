@@ -85,6 +85,11 @@ class TenantInvitationAcceptController extends Controller
         session(['tenant_id' => $invitation->tenant_id]);
         session()->forget('pending_invitation_token');
 
-        return redirect()->route('dashboard');
+        return redirect()
+            ->route('dashboard')
+            ->with(
+                'success',
+                'Entraste no tenant "' . $invitation->tenant->name . '"'
+            );
     }
 }
