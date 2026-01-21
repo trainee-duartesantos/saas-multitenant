@@ -69,4 +69,10 @@ class User extends Authenticatable
             ->wherePivot('role', 'owner')
             ->exists();
     }
+
+    public function pendingTenantInvitations()
+    {
+        return $this->hasMany(TenantInvitation::class, 'email', 'email')
+            ->whereNull('accepted_at');
+    }
 }

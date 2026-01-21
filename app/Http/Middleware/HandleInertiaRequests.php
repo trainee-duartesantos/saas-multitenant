@@ -61,6 +61,13 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
 
+            'pendingInvitationsCount' => fn () =>
+                $user
+                    ? \App\Models\TenantInvitation::where('email', $user->email)
+                        ->whereNull('accepted_at')
+                        ->count()
+                    : 0,
+                    
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),

@@ -1,19 +1,16 @@
 <script setup>
 import { ref, computed } from "vue";
-import { usePage, router, Link } from "@inertiajs/vue3";
-
+import { usePage, router, Link, Head } from "@inertiajs/vue3";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
-
 import { useTenantRole } from "@/composables/useTenantRole";
-import { Head } from "@inertiajs/vue3";
 
 const showingNavigationDropdown = ref(false);
 
 const page = usePage();
-
+const pendingCount = page.props.pendingInvitationsCount ?? 0;
 const auth = computed(() => page.props.auth ?? {});
 const tenants = computed(() => auth.value.tenants ?? []);
 const currentTenantId = computed(() => auth.value.currentTenantId);
@@ -69,6 +66,21 @@ function switchTenant(event) {
                         >
                             Dashboard
                         </NavLink>
+
+                        <Link
+                            :href="route('invitations.index')"
+                            class="relative inline-flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100"
+                        >
+                            <span>🔔</span>
+                            <span class="text-sm">Convites</span>
+
+                            <span
+                                v-if="pendingCount > 0"
+                                class="absolute -top-1 -right-1 inline-flex items-center justify-center text-xs font-bold rounded-full px-2 py-0.5 bg-red-600 text-white"
+                            >
+                                {{ pendingCount }}
+                            </span>
+                        </Link>
 
                         <NavLink :href="route('projects.index')">
                             Projects

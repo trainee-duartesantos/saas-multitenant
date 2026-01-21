@@ -7,6 +7,7 @@ use App\Http\Controllers\TenantInvitationController;
 use App\Http\Controllers\TenantInvitationAcceptController;
 use App\Http\Controllers\TenantMemberController;
 use App\Http\Controllers\TenantOnboardingController;
+use App\Http\Controllers\InvitationsController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\StripeWebhookController;
@@ -34,6 +35,11 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/invitations', [InvitationsController::class, 'index'])
+        ->name('invitations.index');
 });
 
 // Página pública: mostrar convite
