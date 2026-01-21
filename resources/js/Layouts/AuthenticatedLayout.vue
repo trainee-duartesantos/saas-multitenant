@@ -116,15 +116,15 @@ watch(
                         </Link>
 
                         <NavLink :href="route('projects.index')">
-                            Projects
+                            Projetos
                         </NavLink>
 
                         <NavLink :href="route('pricing.index')">
-                            Pricing
+                            Preços
                         </NavLink>
 
                         <NavLink :href="route('billing.history')">
-                            Billing history
+                            Histórico de Faturação
                         </NavLink>
 
                         <div
@@ -168,7 +168,7 @@ watch(
 
                         <template #content>
                             <DropdownLink :href="route('profile.edit')">
-                                Profile
+                                Perfil
                             </DropdownLink>
 
                             <DropdownLink

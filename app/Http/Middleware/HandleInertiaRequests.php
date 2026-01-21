@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\TenantInvitation;
+use App\Models\Project;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -27,12 +29,24 @@ class HandleInertiaRequests extends Middleware
 
         if ($user && session()->has('tenant_id')) {
             $currentTenant = $user->tenants()
-                ->with([
-                    'plan',
-                    'users:id',
-                    'invitations' => fn ($q) => $q->whereNull('accepted_at'),
-                ])
+                ->with('plan')
                 ->find(session('tenant_id'));
+        }
+
+        $usage = null;
+
+        if ($currentTenant) {
+            $membersCount = $currentTenant->users()->count();
+            $pendingInvitesCount = TenantInvitation::where('tenant_id', $currentTenant->id)
+                ->whereNull('accepted_at')
+                ->count();
+
+            $projectsCount = Project::where('tenant_id', $currentTenant->id)->count();
+
+            $usage = [
+                'members' => $membersCount + $pendingInvitesCount,
+                'projects' => $projectsCount,
+            ];
         }
 
         return array_merge(parent::share($request), [
@@ -49,13 +63,7 @@ class HandleInertiaRequests extends Middleware
                 'currentTenant' => $currentTenant ? [
                     'id' => $currentTenant->id,
                     'name' => $currentTenant->name,
-
-                    'usage' => [
-                        'members' =>
-                            ($currentTenant->users->count() ?? 0)
-                            + ($currentTenant->invitations->count() ?? 0),
-                    ],
-
+                    'usage' => $usage,
                     'plan' => $currentTenant->plan ? [
                         'slug' => $currentTenant->plan->slug,
                         'name' => $currentTenant->plan->name,
@@ -70,16 +78,15 @@ class HandleInertiaRequests extends Middleware
                         ],
                     ] : null,
                 ] : null,
-
             ],
 
             'pendingInvitationsCount' => fn () =>
                 $user
-                    ? \App\Models\TenantInvitation::where('email', $user->email)
+                    ? TenantInvitation::where('email', $user->email)
                         ->whereNull('accepted_at')
                         ->count()
                     : 0,
-                    
+
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),
