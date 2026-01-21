@@ -1,218 +1,215 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, usePage, Link } from "@inertiajs/vue3";
-import { computed } from "vue";
-import { useTenantRole } from "@/composables/useTenantRole";
+import { Head, Link, usePage } from "@inertiajs/vue3";
+import { computed, inject } from "vue";
 import OnboardingChecklist from "@/Components/OnboardingChecklist.vue";
 
 const page = usePage();
-const tenant = computed(() => page.props.auth.currentTenant ?? {});
+const requireUpgrade = inject("requireUpgrade");
 
-const usage = computed(() => tenant.value.usage ?? { members: 0, projects: 0 });
-const limits = computed(() => tenant.value.plan?.limits ?? {});
-const plan = computed(() => tenant.value.plan ?? {});
-const pendingInvites = computed(() => page.props.pendingInvitationsCount ?? 0);
+/**
+ * Tenant
+ */
+const tenant = computed(() => page.props.auth?.currentTenant ?? null);
+const plan = computed(() => tenant.value?.plan ?? null);
+const usage = computed(() => tenant.value?.usage ?? {});
+const limits = computed(() => plan.value?.limits ?? {});
 
+/**
+ * Helpers
+ */
 const percent = (used, max) => {
     if (!max) return 0;
     return Math.min(100, Math.round((used / max) * 100));
 };
 
-const memberPercent = computed(() =>
-    percent(usage.value.members, limits.value.max_members)
+/**
+ * Members
+ */
+const membersUsed = computed(() => usage.value.members ?? 0);
+const membersMax = computed(() => limits.value.max_members ?? null);
+const membersPercent = computed(() =>
+    percent(membersUsed.value, membersMax.value)
 );
 
-const projectPercent = computed(() =>
-    percent(usage.value.projects, limits.value.max_projects)
+/**
+ * Projects
+ */
+const projectsUsed = computed(() => usage.value.projects ?? 0);
+const projectsMax = computed(() => limits.value.max_projects ?? null);
+const projectsPercent = computed(() =>
+    percent(projectsUsed.value, projectsMax.value)
 );
 
-const nearingLimit = (value) => value >= 80 && value < 100;
-const exceededLimit = (value) => value >= 100;
+/**
+ * States
+ */
+const isMembersNear = computed(
+    () => membersMax.value && membersPercent.value >= 80
+);
+const isProjectsNear = computed(
+    () => projectsMax.value && projectsPercent.value >= 80
+);
 
-const checklist = computed(() => page.props.onboardingChecklist);
-const { isOwner } = useTenantRole();
+const isMembersExceeded = computed(
+    () => membersMax.value && membersUsed.value >= membersMax.value
+);
+const isProjectsExceeded = computed(
+    () => projectsMax.value && projectsUsed.value >= projectsMax.value
+);
+
+/**
+ * Onboarding
+ */
+const checklist = computed(() => page.props.onboardingChecklist ?? []);
 </script>
 
 <template>
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <div class="p-6 space-y-8">
-            <!-- HEADER -->
-            <div>
-                <h1 class="text-2xl font-bold">Dashboard</h1>
-                <p class="text-sm text-gray-500">
-                    Visão geral do teu workspace
+        <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">Dashboard</h1>
+                    <p class="text-sm text-gray-500">
+                        Visão geral do seu tenant
+                    </p>
+                </div>
+
+                <button
+                    v-if="isMembersNear || isProjectsNear"
+                    @click="
+                        requireUpgrade(
+                            'O seu plano está quase cheio. Faça upgrade para evitar bloqueios.'
+                        )
+                    "
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-black text-white text-sm hover:bg-gray-800"
+                >
+                    🚀 Fazer upgrade
+                </button>
+            </div>
+
+            <!-- PLAN CARD -->
+            <div class="bg-white rounded-xl border p-6">
+                <h2 class="text-lg font-semibold mb-2">Plano atual</h2>
+
+                <p class="text-sm text-gray-700">
+                    Plano:
+                    <strong>{{ plan?.name ?? "—" }}</strong>
+                </p>
+
+                <p class="text-xs text-gray-500 mt-1">
+                    Tenant: {{ tenant?.name }}
                 </p>
             </div>
 
-            <!-- KPI CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- Members -->
-                <div class="bg-white rounded-xl border p-4">
-                    <p class="text-xs text-gray-500">Membros</p>
-                    <p class="text-2xl font-semibold">
-                        {{ usage.members }}
-                    </p>
-                    <p class="text-xs text-gray-400">
-                        Limite: {{ limits.max_members ?? "∞" }}
-                    </p>
-                </div>
+            <!-- USAGE CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- MEMBERS -->
+                <div class="bg-white rounded-xl border p-6 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold">Membros</h3>
 
-                <!-- Projects -->
-                <div class="bg-white rounded-xl border p-4">
-                    <p class="text-xs text-gray-500">Projetos</p>
-                    <p class="text-2xl font-semibold">
-                        {{ usage.projects }}
-                    </p>
-                    <p class="text-xs text-gray-400">
-                        Limite: {{ limits.max_projects ?? "∞" }}
-                    </p>
-                </div>
+                        <span
+                            v-if="isMembersExceeded"
+                            class="text-xs font-medium text-red-700 bg-red-100 px-2 py-0.5 rounded-full"
+                        >
+                            🚫 Limite atingido
+                        </span>
 
-                <!-- Plan -->
-                <div class="bg-white rounded-xl border p-4">
-                    <p class="text-xs text-gray-500">Plano</p>
-                    <p class="text-2xl font-semibold">
-                        {{ plan.name ?? "—" }}
-                    </p>
-                    <Link
-                        v-if="isOwner"
-                        :href="route('pricing.index')"
-                        class="text-xs text-blue-600 hover:underline"
-                    >
-                        Gerir plano →
-                    </Link>
-                </div>
+                        <span
+                            v-else-if="isMembersNear"
+                            class="text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-full"
+                        >
+                            ⚠️ Quase cheio
+                        </span>
+                    </div>
 
-                <!-- Invites -->
-                <div class="bg-white rounded-xl border p-4">
-                    <p class="text-xs text-gray-500">Convites pendentes</p>
-                    <p class="text-2xl font-semibold">
-                        {{ pendingInvites }}
-                    </p>
-                    <Link
-                        :href="route('tenant.members.index')"
-                        class="text-xs text-blue-600 hover:underline"
-                    >
-                        Ver membros →
-                    </Link>
-                </div>
-            </div>
-
-            <!-- USAGE -->
-            <div class="bg-white rounded-xl border p-6 space-y-6">
-                <h2 class="text-lg font-semibold">Utilização do plano</h2>
-
-                <!-- Members -->
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>👥 Membros</span>
+                    <div class="flex justify-between text-sm">
+                        <span>Utilização</span>
                         <span>
-                            {{ usage.members }} /
-                            {{ limits.max_members ?? "∞" }}
+                            {{ membersUsed }} /
+                            {{ membersMax ?? "∞" }}
                         </span>
                     </div>
 
                     <div class="h-2 rounded bg-gray-200 overflow-hidden">
                         <div
                             class="h-full transition-all"
-                            :class="{
-                                'bg-green-600': memberPercent < 80,
-                                'bg-yellow-500': nearingLimit(memberPercent),
-                                'bg-red-600': exceededLimit(memberPercent),
-                            }"
-                            :style="{ width: memberPercent + '%' }"
+                            :class="
+                                isMembersExceeded
+                                    ? 'bg-red-600'
+                                    : isMembersNear
+                                    ? 'bg-yellow-500'
+                                    : 'bg-blue-600'
+                            "
+                            :style="{ width: membersPercent + '%' }"
                         />
                     </div>
 
-                    <p
-                        v-if="nearingLimit(memberPercent)"
-                        class="text-xs text-yellow-600 mt-1"
+                    <Link
+                        href="/members"
+                        class="inline-block text-sm text-blue-600 hover:underline"
                     >
-                        ⚠️ Estás perto do limite de membros
-                    </p>
-
-                    <p
-                        v-if="exceededLimit(memberPercent)"
-                        class="text-xs text-red-600 mt-1"
-                    >
-                        🚫 Limite de membros atingido
-                    </p>
+                        Gerir membros →
+                    </Link>
                 </div>
 
-                <!-- Projects -->
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>📁 Projetos</span>
+                <!-- PROJECTS -->
+                <div class="bg-white rounded-xl border p-6 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold">Projetos</h3>
+
+                        <span
+                            v-if="isProjectsExceeded"
+                            class="text-xs font-medium text-red-700 bg-red-100 px-2 py-0.5 rounded-full"
+                        >
+                            🚫 Limite atingido
+                        </span>
+
+                        <span
+                            v-else-if="isProjectsNear"
+                            class="text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-full"
+                        >
+                            ⚠️ Quase cheio
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between text-sm">
+                        <span>Utilização</span>
                         <span>
-                            {{ usage.projects }} /
-                            {{ limits.max_projects ?? "∞" }}
+                            {{ projectsUsed }} /
+                            {{ projectsMax ?? "∞" }}
                         </span>
                     </div>
 
                     <div class="h-2 rounded bg-gray-200 overflow-hidden">
                         <div
                             class="h-full transition-all"
-                            :class="{
-                                'bg-green-600': projectPercent < 80,
-                                'bg-yellow-500': nearingLimit(projectPercent),
-                                'bg-red-600': exceededLimit(projectPercent),
-                            }"
-                            :style="{ width: projectPercent + '%' }"
+                            :class="
+                                isProjectsExceeded
+                                    ? 'bg-red-600'
+                                    : isProjectsNear
+                                    ? 'bg-yellow-500'
+                                    : 'bg-green-600'
+                            "
+                            :style="{ width: projectsPercent + '%' }"
                         />
                     </div>
 
-                    <p
-                        v-if="nearingLimit(projectPercent)"
-                        class="text-xs text-yellow-600 mt-1"
-                    >
-                        ⚠️ Estás perto do limite de projetos
-                    </p>
-
-                    <p
-                        v-if="exceededLimit(projectPercent)"
-                        class="text-xs text-red-600 mt-1"
-                    >
-                        🚫 Limite de projetos atingido
-                    </p>
-                </div>
-
-                <!-- CTA UPGRADE -->
-                <div
-                    v-if="
-                        isOwner &&
-                        (nearingLimit(memberPercent) ||
-                            nearingLimit(projectPercent))
-                    "
-                    class="rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm"
-                >
-                    <p class="font-medium text-yellow-800">
-                        🚀 Estás a aproximar-te do limite do plano
-                    </p>
-                    <p class="text-yellow-700">
-                        Faz upgrade para desbloquear mais recursos.
-                    </p>
-
                     <Link
-                        :href="route('pricing.index')"
-                        class="inline-block mt-2 rounded-md bg-black px-4 py-2 text-white text-xs hover:bg-gray-800"
+                        href="/projects"
+                        class="inline-block text-sm text-blue-600 hover:underline"
                     >
-                        Ver planos
+                        Ver projetos →
                     </Link>
                 </div>
             </div>
 
             <!-- ONBOARDING -->
-            <OnboardingChecklist v-if="checklist" :items="checklist" />
-
-            <!-- OWNER AREA -->
-            <div
-                v-if="isOwner"
-                class="rounded-xl bg-green-100 border border-green-200 p-4"
-            >
-                🔐 Área exclusiva para Owners
-            </div>
+            <OnboardingChecklist v-if="checklist.length" :items="checklist" />
         </div>
     </AuthenticatedLayout>
 </template>
