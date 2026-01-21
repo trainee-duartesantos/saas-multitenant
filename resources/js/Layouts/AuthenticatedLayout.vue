@@ -19,10 +19,33 @@ const error = computed(() => page.props.flash?.error);
 
 const { isOwner } = useTenantRole();
 const tenant = computed(() => auth.value.currentTenant);
+const usage = computed(() => tenant.value?.usage ?? {});
+const limits = computed(() => tenant.value?.plan?.limits ?? {});
 const canBilling = computed(() => tenant.value?.plan?.features?.billing_access);
 
 const toastSuccess = ref(null);
 const toastError = ref(null);
+
+const percent = (used, max) => {
+    if (!max) return 0;
+    return Math.round((used / max) * 100);
+};
+
+const membersPercent = computed(() =>
+    percent(usage.value.members, limits.value.max_members)
+);
+
+const projectsPercent = computed(() =>
+    percent(usage.value.projects, limits.value.max_projects)
+);
+
+const isNearLimit = computed(
+    () => membersPercent.value >= 80 || projectsPercent.value >= 80
+);
+
+const isLimitExceeded = computed(
+    () => membersPercent.value >= 100 || projectsPercent.value >= 100
+);
 
 function switchTenant(event) {
     router.post(
@@ -127,10 +150,9 @@ watch(
                             Histórico de Faturação
                         </NavLink>
 
-                        <div
-                            class="flex items-center gap-2 text-sm text-gray-500"
-                        >
-                            <span>Tenant:</span>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-gray-500">Tenant:</span>
+
                             <strong class="text-gray-900">
                                 {{
                                     tenants.find(
@@ -138,6 +160,24 @@ watch(
                                     )?.name
                                 }}
                             </strong>
+
+                            <!-- ⚠️ Near limit -->
+                            <span
+                                v-if="isNearLimit && !isLimitExceeded"
+                                class="inline-flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs font-medium"
+                                title="O plano está quase cheio"
+                            >
+                                ⚠️ Plano quase cheio
+                            </span>
+
+                            <!-- 🚫 Exceeded -->
+                            <span
+                                v-if="isLimitExceeded"
+                                class="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-xs font-medium"
+                                title="Limite do plano atingido"
+                            >
+                                🚫 Limite atingido
+                            </span>
                         </div>
 
                         <!-- TENANT SELECTOR -->
