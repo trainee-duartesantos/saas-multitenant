@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Models\TenantInvitation;
 use App\Models\Project;
+use App\Models\Plan;
+
 
 class HandleInertiaRequests extends Middleware
 {
@@ -91,6 +93,25 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),
             ],
+
+            'plans' => fn () => Plan::query()
+                ->orderBy('price')
+                ->get()
+                ->map(fn ($plan) => [
+                    'slug' => $plan->slug,
+                    'name' => $plan->name,
+                    'price' => $plan->price, // em euros ou cents — mantém consistente
+                    'features' => [
+                        'billing_access' => (bool) $plan->billing_access,
+                        'advanced_permissions' => (bool) $plan->advanced_permissions,
+                        'has_priority_support' => (bool) $plan->has_priority_support,
+                    ],
+                    'limits' => [
+                        'max_members' => $plan->max_members,
+                        'max_projects' => $plan->max_projects,
+                    ],
+                ])
+                ->values(),
 
             'csrf_token' => csrf_token(),
         ]);

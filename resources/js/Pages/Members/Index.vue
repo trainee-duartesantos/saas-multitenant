@@ -175,7 +175,6 @@ const sendInvite = () => {
 
                     <button
                         @click="sendInvite"
-                        :disabled="!canInvite"
                         class="px-4 py-2 rounded-md text-sm text-white"
                         :class="
                             canInvite

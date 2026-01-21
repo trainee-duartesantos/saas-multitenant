@@ -1,7 +1,6 @@
 <script setup>
 import UpgradeModal from "@/Components/UpgradeModal.vue";
 import FeatureLock from "@/Components/FeatureLock.vue";
-import { provide } from "vue";
 import { ref, computed, watch } from "vue";
 import { usePage, router, Link, Head } from "@inertiajs/vue3";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
@@ -28,8 +27,6 @@ const canBilling = computed(
     () => tenant.value?.plan?.features?.billing_access === true
 );
 
-const showUpgradeModal = ref(false);
-const upgradeReason = ref("");
 const toastSuccess = ref(null);
 const toastError = ref(null);
 
@@ -62,11 +59,6 @@ function switchTenant(event) {
     );
 }
 
-function requireUpgrade(reason) {
-    upgradeReason.value = reason;
-    showUpgradeModal.value = true;
-}
-
 watch(
     () => page.props.flash?.success,
     (value) => {
@@ -92,8 +84,6 @@ watch(
     },
     { immediate: true }
 );
-
-provide("requireUpgrade", requireUpgrade);
 </script>
 
 <template>
@@ -256,10 +246,4 @@ provide("requireUpgrade", requireUpgrade);
             <slot />
         </main>
     </div>
-    <UpgradeModal
-        :open="showUpgradeModal"
-        :reason="upgradeReason"
-        :plan="tenant?.plan"
-        @close="showUpgradeModal = false"
-    />
 </template>
