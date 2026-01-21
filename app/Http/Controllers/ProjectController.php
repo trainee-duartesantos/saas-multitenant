@@ -16,12 +16,21 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('viewAny', Project::class);
         $tenant = $request->attributes->get('tenant');
 
-        return Inertia::render('Projects/Index', [
-            'projects' => Project::all(),
-            'canCreateProject' => $tenant->canCreateProject(),
+        $projectsCount = $tenant->projects()->count();
+
+        $maxProjects = $tenant->plan?->max_projects;
+
+        $canCreateProject = is_null($maxProjects)
+            || $projectsCount < $maxProjects;
+
+        return inertia('Projects/Index', [
+            'projects' => $tenant->projects()
+                ->latest()
+                ->get(['id', 'name']),
+
+            'canCreateProject' => $canCreateProject,
         ]);
     }
 

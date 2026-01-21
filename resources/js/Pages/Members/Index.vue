@@ -2,8 +2,12 @@
 import { router } from "@inertiajs/vue3";
 import { ref } from "vue";
 import { computed } from "vue";
-import { usePage } from "@inertiajs/vue3";
+import { usePage, Link } from "@inertiajs/vue3";
 import { inject } from "vue";
+import { usePlanFeature } from "@/composables/usePlanFeature";
+import FeatureLock from "@/Components/FeatureLock.vue";
+
+const { enabled: advancedPermissions } = usePlanFeature("advanced_permissions");
 
 const requireUpgrade = inject("requireUpgrade");
 
@@ -112,13 +116,16 @@ const sendInvite = () => {
                     class="border rounded px-3 py-2 text-sm w-full"
                 />
 
-                <select
-                    v-model="inviteRole"
-                    class="border rounded px-2 py-2 text-sm"
-                >
-                    <option value="member">Member</option>
-                    <option value="admin">Admin</option>
+                <select v-if="advancedPermissions">
+                    <option>Admin</option>
+                    <option>Owner</option>
                 </select>
+
+                <FeatureLock
+                    v-else
+                    feature-name="advanced_permissions"
+                    required-plan="Enterprise"
+                />
 
                 <button
                     @click="sendInvite"
@@ -138,6 +145,13 @@ const sendInvite = () => {
                 <span v-if="maxMembers !== null">
                     ({{ usedMembers }}/{{ maxMembers }})
                 </span>
+                —
+                <Link
+                    :href="route('pricing.index')"
+                    class="underline font-medium"
+                >
+                    Fazer upgrade
+                </Link>
             </p>
         </div>
 

@@ -1,5 +1,6 @@
 <script setup>
 import UpgradeModal from "@/Components/UpgradeModal.vue";
+import FeatureLock from "@/Components/FeatureLock.vue";
 import { provide } from "vue";
 import { ref, computed, watch } from "vue";
 import { usePage, router, Link, Head } from "@inertiajs/vue3";
@@ -23,7 +24,9 @@ const { isOwner } = useTenantRole();
 const tenant = computed(() => auth.value.currentTenant);
 const usage = computed(() => tenant.value?.usage ?? {});
 const limits = computed(() => tenant.value?.plan?.limits ?? {});
-const canBilling = computed(() => tenant.value?.plan?.features?.billing_access);
+const canBilling = computed(
+    () => tenant.value?.plan?.features?.billing_access === true
+);
 
 const showUpgradeModal = ref(false);
 const upgradeReason = ref("");
@@ -219,15 +222,22 @@ provide("requireUpgrade", requireUpgrade);
 
                         <template #content>
                             <DropdownLink :href="route('profile.edit')">
-                                Perfil
+                                Profile
                             </DropdownLink>
 
+                            <!-- 🔐 Billing -->
                             <DropdownLink
-                                v-if="isOwner && canBilling"
-                                href="/billing"
+                                v-if="canBilling"
+                                :href="route('billing')"
                             >
                                 Billing
                             </DropdownLink>
+
+                            <FeatureLock
+                                v-else
+                                feature-name="billing_access"
+                                required-plan="Pro"
+                            />
 
                             <DropdownLink
                                 :href="route('logout')"

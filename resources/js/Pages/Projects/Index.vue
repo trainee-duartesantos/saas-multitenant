@@ -2,6 +2,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router, Link, usePage } from "@inertiajs/vue3";
 import { inject, computed } from "vue";
+import { usePlanFeature } from "@/composables/usePlanFeature";
+import FeatureLock from "@/Components/FeatureLock.vue";
 
 const props = defineProps({
     projects: Array,
@@ -54,16 +56,18 @@ function createProject() {
                 </div>
 
                 <button
+                    v-if="canCreateProject"
                     @click="createProject"
-                    class="px-4 py-2 rounded-md text-sm text-white"
-                    :class="
-                        canCreateProject
-                            ? 'bg-black hover:bg-gray-800'
-                            : 'bg-gray-400 cursor-not-allowed'
-                    "
+                    class="btn-primary"
                 >
-                    ➕ Novo projeto
+                    Novo projeto
                 </button>
+
+                <FeatureLock
+                    v-else
+                    feature-name="projects_access"
+                    required-plan="Pro"
+                />
             </div>
 
             <!-- Aviso de limite -->
