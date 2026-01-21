@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('subscriptions', function (Blueprint $table) {
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->dropColumn('user_id');
+        Schema::table('tenants', function (Blueprint $table) {
+            $table->foreignId('pending_plan_id')->nullable()->after('plan_id');
         });
+
     }
 
     /**
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('subscriptions', function (Blueprint $table) {
+        Schema::table('tenants', function (Blueprint $table) {
             //
         });
     }

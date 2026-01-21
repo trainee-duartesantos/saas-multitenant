@@ -10,14 +10,21 @@ use App\Http\Controllers\TenantOnboardingController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\StripeWebhookController;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\BillingHistoryController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
-    ->withoutMiddleware(['web']);
+Route::post('/stripe/webhook', function (\Illuminate\Http\Request $request) {
+    // 1️⃣ Cashier trata subscriptions, invoices, status
+    app(WebhookController::class)->handleWebhook($request);
+
+    // 2️⃣ O teu controller trata plano, logs, downgrade, etc
+    return app(StripeWebhookController::class)
+        ->handle($request);
+})->withoutMiddleware(['web']);
 
 
 Route::get('/', function () {
@@ -115,6 +122,11 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
     Route::get('/billing/history', [BillingHistoryController::class, 'index'])
         ->name('billing.history');
 
+    Route::post('/billing/downgrade/{plan}', [BillingController::class, 'downgrade'])
+        ->name('billing.downgrade');
+
+    Route::post('/billing/cancel', [BillingController::class, 'cancel'])
+        ->name('billing.cancel');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

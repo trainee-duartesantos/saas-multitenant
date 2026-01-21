@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\User;
 use App\Models\Tenant;
 use App\Observers\TenantObserver;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Cashier::useSubscriptionModel(\App\Models\Subscription::class);
+        
         Inertia::share([
             'auth' => function () {
 

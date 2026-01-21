@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use App\Models\TenantInvitation;
 use Laravel\Cashier\Billable;
-use Laravel\Cashier\Subscription;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Models\Subscription;
 
 class Tenant extends Model
 {
@@ -134,24 +135,15 @@ class Tenant extends Model
         return $this->projects()->count() < $this->plan->max_projects;
     }
 
-    public function getForeignKey()
+    public function getMorphClass()
     {
-        return 'tenant_id';
+        return self::class;
     }
 
-    public function isOwnerOfTenant(int $tenantId): bool
+    public function subscriptions(): MorphMany
     {
-        return $this->tenants()
-            ->where('tenant_id', $tenantId)
-            ->wherePivot('role', 'owner')
-            ->exists();
-    }
-
-    public function activeSubscription(): ?Subscription
-    {
-        return $this->subscriptions()
-            ->whereIn('stripe_status', ['active', 'trialing'])
-            ->latest()
-            ->first();
+        return $this->morphMany(Subscription::class, 'billable')
+            ->orderBy('created_at', 'desc');
     }
 }
+

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
 use App\Models\BillingLog;
+use App\Models\Tenant;
+use App\Models\Plan;
 
 class StripeWebhookController extends Controller
 {
@@ -27,29 +29,30 @@ class StripeWebhookController extends Controller
 
         match ($event->type) {
             'checkout.session.completed' => $this->handleCheckoutCompleted($event),
+            'invoice.payment_succeeded' => $this->handleInvoicePaid($event),
+            'customer.subscription.deleted' => $this->handleSubscriptionDeleted($event),
             default => null,
         };
 
         return response('Webhook handled', 200);
     }
 
+    /**
+     * 🆕 Free → Paid (checkout)
+     */
     protected function handleCheckoutCompleted($event)
     {
         $session = $event->data->object;
 
         $tenantId = $session->metadata->tenant_id ?? null;
-        $planId = $session->metadata->plan_id ?? null;
+        $planId   = $session->metadata->plan_id ?? null;
 
-        if (! $tenantId || ! $planId) {
-            return;
-        }
+        if (! $tenantId || ! $planId) return;
 
-        $tenant = \App\Models\Tenant::find($tenantId);
-        $plan = \App\Models\Plan::find($planId);
+        $tenant = Tenant::find($tenantId);
+        $plan   = Plan::find($planId);
 
-        if (! $tenant || ! $plan) {
-            return;
-        }
+        if (! $tenant || ! $plan) return;
 
         $tenant->update([
             'plan_id' => $plan->id,
@@ -58,14 +61,70 @@ class StripeWebhookController extends Controller
 
         BillingLog::create([
             'tenant_id' => $tenant->id,
-            'user_id' => null, // webhook
-            'plan_id' => $plan->id,
-            'action' => 'subscription_created',
+            'plan_id'   => $plan->id,
+            'action'    => 'subscription_created',
             'stripe_subscription_id' => $session->subscription,
             'metadata' => [
                 'checkout_session_id' => $session->id,
-                'payment_status' => $session->payment_status,
             ],
+        ]);
+    }
+
+    /**
+     * 🔻 Apply scheduled downgrade at renewal
+     */
+    protected function handleInvoicePaid($event)
+    {
+        $subscriptionId = $event->data->object->subscription;
+
+        $tenant = Tenant::whereHas('subscriptions', fn ($q) =>
+            $q->where('stripe_id', $subscriptionId)
+        )->first();
+
+        if (! $tenant || ! $tenant->pending_plan_id) {
+            return;
+        }
+
+        $tenant->update([
+            'plan_id' => $tenant->pending_plan_id,
+            'pending_plan_id' => null,
+        ]);
+
+        BillingLog::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $tenant->plan_id,
+            'action' => 'plan_downgraded',
+            'stripe_subscription_id' => $subscriptionId,
+        ]);
+    }
+
+    /**
+     * ❌ Subscription ended (cancel)
+     */
+    protected function handleSubscriptionDeleted($event)
+    {
+        $subscriptionId = $event->data->object->id;
+
+        $tenant = Tenant::whereHas('subscriptions', fn ($q) =>
+            $q->where('stripe_id', $subscriptionId)
+        )->first();
+
+        if (! $tenant) {
+            return;
+        }
+
+        $freePlan = Plan::where('slug', 'free')->first();
+
+        $tenant->update([
+            'plan_id' => $freePlan->id,
+            'pending_plan_id' => null,
+        ]);
+
+        BillingLog::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $freePlan->id,
+            'action' => 'subscription_ended',
+            'stripe_subscription_id' => $subscriptionId,
         ]);
     }
 }

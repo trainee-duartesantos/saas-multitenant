@@ -8,9 +8,15 @@ defineProps({
     canUpgrade: Boolean,
 });
 
-function upgrade(planId) {
-    router.post(route("billing.checkout", planId));
-}
+const upgrade = (plan) => {
+    router.post(route("billing.checkout", plan.id));
+};
+
+const downgrade = (plan) => {
+    if (!confirm("Downgrade will apply next billing cycle. Continue?")) return;
+
+    router.post(route("billing.downgrade", plan.id));
+};
 </script>
 
 <template>
@@ -50,26 +56,34 @@ function upgrade(planId) {
 
                     <!-- 🔥 LÓGICA CORRETA -->
                     <button
-                        v-if="
-                            canUpgrade &&
-                            plan.id !== currentPlanId &&
-                            plan.stripe_price_id
-                        "
-                        @click="upgrade(plan.id)"
+                        v-if="plan.id > currentPlanId && canUpgrade"
+                        @click="upgrade(plan)"
                         class="btn-primary"
                     >
                         Upgrade
                     </button>
 
+                    <button
+                        v-else-if="plan.id < currentPlanId && canUpgrade"
+                        @click="downgrade(plan)"
+                        class="btn-secondary"
+                    >
+                        Downgrade (next cycle)
+                    </button>
+
+                    <button v-else disabled class="btn-disabled">
+                        Current plan
+                    </button>
+
                     <span
-                        v-else-if="plan.id === currentPlanId"
+                        v-if="plan.id === currentPlanId"
                         class="block text-center text-sm text-green-600 font-medium"
                     >
                         Plano atual
                     </span>
 
                     <span
-                        v-else-if="!canUpgrade"
+                        v-if="!canUpgrade"
                         class="block text-center text-sm text-gray-400"
                     >
                         Apenas o owner pode alterar o plano

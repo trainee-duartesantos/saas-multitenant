@@ -9,69 +9,100 @@ use Inertia\Inertia;
 
 class BillingController extends Controller
 {
+    /**
+     * 💳 Checkout / Upgrade
+     * - Free → Paid  (checkout)
+     * - Paid → Paid  (swap imediato)
+     */
     public function checkout(Request $request, Plan $plan)
     {
         $tenant = $request->attributes->get('tenant');
-        $user = $request->user();
+        $user   = $request->user();
 
-        abort_unless(
-            $user->isOwnerOfTenant($tenant->id),
-            403,
-            'Only owners can change the plan.'
-        );
-
+        abort_unless($user->isOwnerOfTenant($tenant->id), 403);
         abort_unless($plan->stripe_price_id, 403);
 
-        // 🔁 JÁ TEM SUBSCRIÇÃO → SWAP
-        if ($subscription = $tenant->activeSubscription()) {
-
-            $previousPlanId = $tenant->plan_id;
-
-            $subscription->swap($plan->stripe_price_id);
+        if ($tenant->subscribed('default')) {
+            $tenant->subscription('default')
+                ->swap($plan->stripe_price_id);
 
             $tenant->update(['plan_id' => $plan->id]);
 
-            BillingLog::create([
-                'tenant_id' => $tenant->id,
-                'user_id' => $user->id,
-                'plan_id' => $plan->id,
-                'action' => 'plan_swapped',
-                'stripe_subscription_id' => $subscription->stripe_id,
-                'metadata' => [
-                    'previous_plan_id' => $previousPlanId,
-                ],
-            ]);
-
-            return redirect()
-                ->route('pricing.index')
-                ->with('success', 'Plan upgraded successfully.');
+            return back()->with('success', 'Plan updated.');
         }
 
-        // 🆕 NÃO TEM SUBSCRIÇÃO → CHECKOUT
         $checkout = $tenant
             ->newSubscription('default', $plan->stripe_price_id)
             ->checkout([
                 'success_url' => route('billing.success'),
-                'cancel_url' => route('pricing.index'),
+                'cancel_url'  => route('pricing.index'),
                 'metadata' => [
                     'tenant_id' => $tenant->id,
-                    'plan_id' => $plan->id,
+                    'plan_id'   => $plan->id,
                 ],
             ]);
 
-        // ⚠️ LOG DA CRIAÇÃO DA SUBSCRIÇÃO
-        // 👉 será feito no success() ou webhook
-
         return Inertia::location($checkout->url);
+
     }
 
-    public function success(Request $request)
+    /**
+     * ✅ Redirect após checkout
+     * (estado real vem do webhook)
+     */
+    public function success()
     {
-        // Aqui podes criar o log de subscription_created
-        // ou deixar isto para o webhook (mais profissional)
-
         return redirect()
             ->route('dashboard')
             ->with('success', 'Subscription created successfully.');
+    }
+
+    /**
+     * 🔻 Downgrade (aplicado no próximo ciclo)
+     */
+    public function downgrade(Request $request, Plan $plan)
+    {
+        $tenant = $request->attributes->get('tenant');
+        $user   = $request->user();
+
+        abort_unless($user->isOwnerOfTenant($tenant->id), 403);
+
+        $tenant->update([
+            'pending_plan_id' => $plan->id,
+        ]);
+
+        return back()->with(
+            'success',
+            'Downgrade scheduled for next billing cycle.'
+        );
+    }
+
+    /**
+     * ❌ Cancelamento (no fim do ciclo)
+     */
+    public function cancel(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+        $user   = $request->user();
+
+        abort_unless($user->isOwnerOfTenant($tenant->id), 403);
+
+        $subscription = $tenant->activeSubscription();
+        abort_unless($subscription, 400);
+
+        $subscription->cancel(); // grace period
+
+        BillingLog::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'plan_id' => $tenant->plan_id,
+            'action' => 'subscription_canceled',
+            'stripe_subscription_id' => $subscription->stripe_id,
+        ]);
+
+        return back()->with(
+            'success',
+            'Subscription will be canceled at the end of the billing period.'
+        );
     }
 }

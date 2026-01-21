@@ -20,6 +20,10 @@ return [
 
     'secret' => env('STRIPE_SECRET'),
 
+    'model' => App\Models\Tenant::class,
+
+    'subscription_model' => App\Models\Subscription::class,
+
     /*
     |--------------------------------------------------------------------------
     | Cashier Path
