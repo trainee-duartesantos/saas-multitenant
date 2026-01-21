@@ -3,6 +3,9 @@ import { router } from "@inertiajs/vue3";
 import { ref } from "vue";
 import { computed } from "vue";
 import { usePage } from "@inertiajs/vue3";
+import { inject } from "vue";
+
+const requireUpgrade = inject("requireUpgrade");
 
 const page = usePage();
 
@@ -70,7 +73,12 @@ const inviteEmail = ref("");
 const inviteRole = ref("member");
 
 const sendInvite = () => {
-    if (!canInvite.value) return;
+    if (!canInvite.value) {
+        requireUpgrade(
+            "O seu plano atual atingiu o limite de membros. Faça upgrade para convidar mais pessoas."
+        );
+        return;
+    }
 
     router.post(
         route("tenant.invitations.store"),
