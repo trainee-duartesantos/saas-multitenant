@@ -61,6 +61,18 @@ class ProjectController extends Controller
             ->with('success', 'Projeto criado com sucesso.');
     }
 
+    public function show(Request $request, Project $project)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        abort_unless($project->tenant_id === $tenant->id, 403);
+
+        return Inertia::render('Projects/Show', [
+            'project' => $project,
+        ]);
+    }
+
+
 
     /**
      * Apagar projeto

@@ -29,6 +29,8 @@ class BillingController extends Controller
          */
         if ($tenant->subscribed('default')) {
 
+            // Stripe handles proration automatically via Billing
+            // This ensures immediate upgrade with pro-rata charge
             Stripe::setApiKey(config('services.stripe.secret'));
 
             $subscription = StripeSubscription::retrieve(

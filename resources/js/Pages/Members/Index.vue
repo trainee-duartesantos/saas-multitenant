@@ -206,7 +206,7 @@ const sendInvite = () => {
 
             <!-- Membros -->
             <div class="bg-white rounded-xl border overflow-hidden">
-                <h2 class="px-4 py-3 font-medium border-b">Membros ativos</h2>
+                <h2 class="px-4 py-3 font-medium border-b">👥 Membros ativos</h2>
 
                 <table class="w-full text-sm table-fixed">
                     <thead class="bg-gray-50 border-b">
@@ -224,10 +224,27 @@ const sendInvite = () => {
                             v-for="member in members"
                             :key="member.id"
                             class="border-b last:border-0"
+                            :class="member.role === 'owner' ? 'relative' : ''"
                         >
-                            <td class="p-3 truncate">
-                                {{ member.name }}
+                            <td class="p-3">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        v-if="member.role === 'owner'"
+                                        class="absolute left-0 top-0 h-full w-1 bg-purple-500 rounded-r"
+                                    />
+
+                                    <div
+                                        class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-700"
+                                    >
+                                        {{ member.name?.[0] }}
+                                    </div>
+
+                                    <span class="truncate">{{
+                                        member.name
+                                    }}</span>
+                                </div>
                             </td>
+
                             <td class="truncate">{{ member.email }}</td>
 
                             <td class="text-center">

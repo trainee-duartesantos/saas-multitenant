@@ -71,11 +71,19 @@ const checklist = computed(() => page.props.onboardingChecklist ?? []);
         <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
             <!-- Header -->
             <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold">Dashboard</h1>
-                    <p class="text-sm text-gray-500">
-                        Visão geral do seu tenant
-                    </p>
+                <div class="flex items-center gap-3">
+                    <div
+                        class="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center font-bold text-gray-700"
+                    >
+                        {{ tenant?.name?.[0] }}
+                    </div>
+
+                    <div>
+                        <h1 class="text-2xl font-bold">Dashboard</h1>
+                        <p class="text-sm text-gray-500">
+                            {{ tenant?.name }}
+                        </p>
+                    </div>
                 </div>
 
                 <button
@@ -87,7 +95,7 @@ const checklist = computed(() => page.props.onboardingChecklist ?? []);
                     "
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-black text-white text-sm hover:bg-gray-800"
                 >
-                    🚀 Fazer upgrade
+                    🚀 Fazer upgrade do plano
                 </button>
             </div>
 
@@ -110,7 +118,9 @@ const checklist = computed(() => page.props.onboardingChecklist ?? []);
                 <!-- MEMBERS -->
                 <div class="bg-white rounded-xl border p-6 space-y-3">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-semibold">Membros</h3>
+                        <h3 class="font-semibold flex items-center gap-2">
+                            👥 Membros
+                        </h3>
 
                         <span
                             v-if="isMembersExceeded"
@@ -160,7 +170,9 @@ const checklist = computed(() => page.props.onboardingChecklist ?? []);
                 <!-- PROJECTS -->
                 <div class="bg-white rounded-xl border p-6 space-y-3">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-semibold">Projetos</h3>
+                        <h3 class="font-semibold flex items-center gap-2">
+                            📁 Projetos
+                        </h3>
 
                         <span
                             v-if="isProjectsExceeded"

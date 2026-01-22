@@ -136,16 +136,28 @@ function createProject() {
                         Projeto ID #{{ project.id }}
                     </p>
 
-                    <div class="mt-4">
+                    <div class="mt-4 flex items-center gap-4 text-sm">
                         <Link
                             :href="route('projects.show', project.id)"
-                            class="text-sm text-blue-600 hover:underline"
+                            class="text-blue-600 hover:underline"
                         >
-                            Abrir projeto →
+                            Abrir projeto
                         </Link>
+
+                        <button
+                            @click="
+                                router.delete(
+                                    route('projects.destroy', project.id)
+                                )
+                            "
+                            class="text-red-600 hover:underline"
+                        >
+                           🗑️ Eliminar projeto
+                        </button>
                     </div>
                 </div>
             </div>
+            
         </div>
     </AuthenticatedLayout>
 </template>

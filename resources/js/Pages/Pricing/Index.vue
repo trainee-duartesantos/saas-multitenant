@@ -1,12 +1,14 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
+import { ref } from "vue";
 
 defineProps({
     plans: Array,
     currentPlanId: Number,
     canUpgrade: Boolean,
 });
+const showRules = ref(false);
 
 const upgrade = (plan) => {
     router.post(route("billing.checkout", plan.id));
@@ -89,7 +91,39 @@ const downgrade = (plan) => {
                         Apenas o owner pode alterar o plano
                     </span>
                 </div>
+                <button
+                    class="text-xs text-gray-500 underline mt-2"
+                    @click="showRules = true"
+                >
+                    Regras de cancelamento
+                </button>
             </div>
         </div>
     </AuthenticatedLayout>
+    <div
+        v-if="showRules"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
+        <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4">
+            <h2 class="text-lg font-semibold">
+                Regras de faturação e cancelamento
+            </h2>
+
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• Cancelamentos aplicam-se no fim do ciclo atual</li>
+                <li>• Não existe reembolso proporcional</li>
+                <li>• Downgrades entram em vigor no próximo ciclo</li>
+                <li>• O acesso mantém-se até ao final do período pago</li>
+            </ul>
+
+            <div class="text-right">
+                <button
+                    @click="showRules = false"
+                    class="px-4 py-2 rounded-md bg-black text-white text-sm"
+                >
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
