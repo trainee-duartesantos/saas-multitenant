@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Tenant;
 use App\Observers\TenantObserver;
 use Laravel\Cashier\Cashier;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,12 +27,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Cashier::useSubscriptionModel(\App\Models\Subscription::class);
-        
+
         Inertia::share([
             'auth' => function () {
 
                 /** @var User|null $user */
-                $user = auth()->user();
+                $user = Auth::user();
 
                 return [
                     'user' => $user,
@@ -41,7 +42,7 @@ class AppServiceProvider extends ServiceProvider
             },
 
             'onboardingChecklist' => function () {
-                $user = auth()->user();
+                $user = Auth::user();
                 $tenantId = session('tenant_id');
 
                 if (! $user || ! $tenantId) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TenantInvitation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TenantInvitationAcceptController extends Controller
@@ -27,7 +28,7 @@ class TenantInvitationAcceptController extends Controller
                     'name' => $invitation->tenant->name,
                 ],
             ],
-            'authenticated' => auth()->check(),
+            'authenticated' => Auth::check(),
         ]);
     }
 

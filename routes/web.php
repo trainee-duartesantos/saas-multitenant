@@ -95,6 +95,7 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
                 ->get(),
             'membersTotal' => $tenant->users()->count(),
             'onboardingChecklist' => $tenant->onboardingChecklist(),
+            'onboardingCompleted' => (bool) $tenant->onboarding?->completed,
         ]);
     })->name('dashboard');
 

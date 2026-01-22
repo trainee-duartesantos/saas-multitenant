@@ -1,10 +1,22 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, usePage } from "@inertiajs/vue3";
-import { computed, inject } from "vue";
+import { computed, inject, ref, onMounted } from "vue";
 import OnboardingChecklist from "@/Components/OnboardingChecklist.vue";
 
 const page = usePage();
+const showOnboardingBanner = ref(false);
+
+onMounted(() => {
+    if (page.props.onboardingCompleted) {
+        showOnboardingBanner.value = true;
+
+        setTimeout(() => {
+            showOnboardingBanner.value = false;
+        }, 3000);
+    }
+});
+
 const requireUpgrade = inject("requireUpgrade");
 
 /**
@@ -86,6 +98,24 @@ const latestProjects = computed(() => page.props.latestProjects ?? []);
                         </p>
                     </div>
                 </div>
+
+                <!-- ONBOARDING -->
+                <transition
+                    enter-active-class="transition ease-out duration-300"
+                    enter-from-class="opacity-0"
+                    enter-to-class="opacity-100"
+                    leave-active-class="transition ease-in duration-500"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
+                >
+                    <div
+                        v-if="showOnboardingBanner"
+                        class="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800"
+                    >
+                        ✅ Onboarding concluído com sucesso. O seu tenant está
+                        pronto!
+                    </div>
+                </transition>
 
                 <button
                     v-if="isMembersNear || isProjectsNear"
@@ -262,9 +292,6 @@ const latestProjects = computed(() => page.props.latestProjects ?? []);
                     📁 Ver todos os projetos
                 </Link>
             </div>
-
-            <!-- ONBOARDING -->
-            <OnboardingChecklist v-if="checklist.length" :items="checklist" />
         </div>
     </AuthenticatedLayout>
 </template>
