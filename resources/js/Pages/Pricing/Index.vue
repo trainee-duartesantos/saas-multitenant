@@ -60,7 +60,7 @@ const downgrade = (plan) => {
                     <button
                         v-if="plan.id > currentPlanId && canUpgrade"
                         @click="upgrade(plan)"
-                        class="btn-primary"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-black text-white text-sm hover:bg-gray-800"
                     >
                         Upgrade
                     </button>
@@ -68,7 +68,7 @@ const downgrade = (plan) => {
                     <button
                         v-else-if="plan.id < currentPlanId && canUpgrade"
                         @click="downgrade(plan)"
-                        class="btn-secondary"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gray-700 text-white text-sm hover:bg-red-800"
                     >
                         Downgrade (próximo ciclo)
                     </button>
