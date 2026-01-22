@@ -9,6 +9,7 @@ use App\Models\TenantInvitation;
 use Laravel\Cashier\Billable;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\Subscription;
+use App\Models\TenantOnboarding;
 
 class Tenant extends Model
 {
@@ -53,6 +54,17 @@ class Tenant extends Model
     public function onboarding()
     {
         return $this->hasOne(TenantOnboarding::class);
+    }
+
+    public function onboardingChecklist(): array
+    {
+        $onboarding = $this->onboarding;
+
+        if (!$onboarding || $onboarding->completed) {
+            return [];
+        }
+
+        return $onboarding->checklist(); 
     }
 
     public function plan()

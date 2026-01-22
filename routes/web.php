@@ -73,6 +73,11 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
     Route::get('/dashboard', function (Request $request) {
         $tenant = $request->attributes->get('tenant');
 
+        $latestProjects = $tenant->projects()
+        ->latest()
+        ->limit(5)
+        ->get(['id', 'name', 'created_at']);
+        
         return Inertia::render('Dashboard', [
             'plan' => [
                 'name' => $tenant->plan?->name,
@@ -83,6 +88,13 @@ Route::middleware(['auth', 'verified', 'tenant', 'tenant.onboarded'])->group(fun
                 'active' => $tenant->onTrial(),
                 'ends_at' => $tenant->trial_ends_at,
             ],
+            'latestProjects' => $latestProjects,
+            'membersPreview' => $tenant->users()
+                ->select('users.id', 'users.name')
+                ->limit(4)
+                ->get(),
+            'membersTotal' => $tenant->users()->count(),
+            'onboardingChecklist' => $tenant->onboardingChecklist(),
         ]);
     })->name('dashboard');
 

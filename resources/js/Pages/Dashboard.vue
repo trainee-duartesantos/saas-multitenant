@@ -62,6 +62,7 @@ const isProjectsExceeded = computed(
  * Onboarding
  */
 const checklist = computed(() => page.props.onboardingChecklist ?? []);
+const latestProjects = computed(() => page.props.latestProjects ?? []);
 </script>
 
 <template>
@@ -163,7 +164,7 @@ const checklist = computed(() => page.props.onboardingChecklist ?? []);
                         href="/members"
                         class="inline-block text-sm text-blue-600 hover:underline"
                     >
-                        Gerir membros →
+                        👥 Gerir membros
                     </Link>
                 </div>
 
@@ -215,9 +216,51 @@ const checklist = computed(() => page.props.onboardingChecklist ?? []);
                         href="/projects"
                         class="inline-block text-sm text-blue-600 hover:underline"
                     >
-                        Ver projetos →
+                        📁 Ver projetos
                     </Link>
                 </div>
+            </div>
+
+            <!-- RECENT PROJECTS -->
+            <div class="bg-white rounded-xl border p-6 space-y-4">
+                <h3 class="font-semibold flex items-center gap-2">
+                    📊 Projetos recentes
+                </h3>
+
+                <p v-if="!latestProjects.length" class="text-sm text-gray-500">
+                    Ainda não existem projetos.
+                </p>
+
+                <ul v-else class="space-y-2">
+                    <li
+                        v-for="project in latestProjects"
+                        :key="project.id"
+                        class="flex items-center justify-between text-sm"
+                    >
+                        <div class="flex flex-col">
+                            <span class="font-medium truncate">
+                                {{ project.name }}
+                            </span>
+                            <span class="text-xs text-gray-400">
+                                Criado em {{ project.created_at }}
+                            </span>
+                        </div>
+
+                        <Link
+                            :href="route('projects.show', project.id)"
+                            class="text-blue-600 hover:underline text-xs"
+                        >
+                            Abrir projeto
+                        </Link>
+                    </li>
+                </ul>
+
+                <Link
+                    href="/projects"
+                    class="inline-block text-sm text-gray-600 hover:underline"
+                >
+                    📁 Ver todos os projetos
+                </Link>
             </div>
 
             <!-- ONBOARDING -->
