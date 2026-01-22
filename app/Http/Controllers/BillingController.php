@@ -85,7 +85,7 @@ class BillingController extends Controller
     {
         return redirect()
             ->route('dashboard')
-            ->with('success', 'Subscription created successfully.');
+            ->with('success', 'Subscrição criada com sucesso.');
     }
 
     /**
@@ -108,32 +108,49 @@ class BillingController extends Controller
         );
     }
 
+    public function cancelDowngrade(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        $tenant->update(['pending_plan_id' => null]);
+
+        return back()->with('success', 'Downgrade cancelado.');
+    }
+
+
     /**
-     * ❌ Cancelamento (no fim do ciclo)
+     * ❌ Cancelar (grace period)
      */
     public function cancel(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
-        $user   = $request->user();
+        $subscription = $tenant->subscription('default');
 
-        abort_unless($user->isOwnerOfTenant($tenant->id), 403);
-
-        $subscription = $tenant->activeSubscription();
         abort_unless($subscription, 400);
 
-        $subscription->cancel(); // grace period
-
-        BillingLog::create([
-            'tenant_id' => $tenant->id,
-            'user_id' => $user->id,
-            'plan_id' => $tenant->plan_id,
-            'action' => 'subscription_canceled',
-            'stripe_subscription_id' => $subscription->stripe_id,
-        ]);
+        $subscription->cancel();
 
         return back()->with(
             'success',
-            'Subscription will be canceled at the end of the billing period.'
+            'A subscrição será cancelada no fim do período.'
+        );
+    }
+
+    /**
+     * 🔄 Reativar durante grace period
+     */
+    public function resume(Request $request)
+    {
+        $tenant = $request->attributes->get('tenant');
+        $subscription = $tenant->subscription('default');
+
+        abort_unless($subscription && $subscription->onGracePeriod(), 400);
+
+        $subscription->resume();
+
+        return back()->with(
+            'success',
+            'Subscrição reativada com sucesso.'
         );
     }
 }
