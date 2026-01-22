@@ -28,7 +28,7 @@ class StripeWebhookController extends Controller
         }
 
         match ($event->type) {
-            'checkout.session.completed' => $this->handleCheckoutCompleted($event),
+            'customer.subscription.created' => $this->handleSubscriptionCreated($event),
             'invoice.payment_succeeded' => $this->handleInvoicePaid($event),
             'customer.subscription.deleted' => $this->handleSubscriptionDeleted($event),
             default => null,
@@ -70,9 +70,35 @@ class StripeWebhookController extends Controller
         ]);
     }
 
-    /**
-     * 🔻 Apply scheduled downgrade at renewal
-     */
+    protected function handleSubscriptionCreated($event)
+    {
+        $subscription = $event->data->object;
+
+        $tenantId = $subscription->metadata->tenant_id ?? null;
+        $planId   = $subscription->metadata->plan_id ?? null;
+
+        if (! $tenantId || ! $planId) return;
+
+        $tenant = Tenant::find($tenantId);
+        $plan   = Plan::find($planId);
+
+        if (! $tenant || ! $plan) return;
+
+        // Cashier já criou o registo em subscriptions
+        // Aqui apenas garantimos estado local
+        $tenant->update([
+            'plan_id' => $plan->id,
+            'trial_ends_at' => null,
+        ]);
+
+        BillingLog::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $plan->id,
+            'action' => 'subscription_created',
+            'stripe_subscription_id' => $subscription->id,
+        ]);
+    }
+
     protected function handleInvoicePaid($event)
     {
         $subscriptionId = $event->data->object->subscription;

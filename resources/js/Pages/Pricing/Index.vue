@@ -50,7 +50,7 @@ const downgrade = (plan) => {
                             📁 {{ plan.max_projects ?? "Ilimitado" }} projetos
                         </li>
                         <li v-if="plan.has_priority_support">
-                            ⭐ Priority support
+                            ⭐ Suporte prioritário
                         </li>
                     </ul>
 
@@ -68,11 +68,11 @@ const downgrade = (plan) => {
                         @click="downgrade(plan)"
                         class="btn-secondary"
                     >
-                        Downgrade (next cycle)
+                        Downgrade (próximo ciclo)
                     </button>
 
                     <button v-else disabled class="btn-disabled">
-                        Current plan
+                        Plano atual
                     </button>
 
                     <span

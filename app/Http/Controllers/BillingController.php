@@ -6,6 +6,8 @@ use App\Models\Plan;
 use App\Models\BillingLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Stripe\Stripe;
+use Stripe\Subscription as StripeSubscription;
 
 class BillingController extends Controller
 {
@@ -22,15 +24,45 @@ class BillingController extends Controller
         abort_unless($user->isOwnerOfTenant($tenant->id), 403);
         abort_unless($plan->stripe_price_id, 403);
 
+        /**
+         * 🔁 Paid → Paid (upgrade imediato com pró-rata)
+         */
         if ($tenant->subscribed('default')) {
-            $tenant->subscription('default')
-                ->swap($plan->stripe_price_id);
 
-            $tenant->update(['plan_id' => $plan->id]);
+            Stripe::setApiKey(config('services.stripe.secret'));
 
-            return back()->with('success', 'Plan updated.');
+            $subscription = StripeSubscription::retrieve(
+                $tenant->subscription('default')->stripe_id
+            );
+
+            StripeSubscription::update(
+                $subscription->id,
+                [
+                    'items' => [[
+                        'id' => $subscription->items->data[0]->id,
+                        'price' => $plan->stripe_price_id,
+                    ]],
+                    'proration_behavior' => 'create_prorations',
+                    'billing_cycle_anchor' => 'unchanged',
+                ]
+            );
+
+            BillingLog::create([
+                'tenant_id' => $tenant->id,
+                'plan_id' => $plan->id,
+                'action' => 'plan_upgraded_prorated',
+                'stripe_subscription_id' => $subscription->id,
+            ]);
+
+            return back()->with(
+                'success',
+                'Plano atualizado com cobrança pró-rata.'
+            );
         }
 
+        /**
+         * 🆕 Free → Paid (checkout)
+         */
         $checkout = $tenant
             ->newSubscription('default', $plan->stripe_price_id)
             ->checkout([
@@ -43,7 +75,6 @@ class BillingController extends Controller
             ]);
 
         return Inertia::location($checkout->url);
-
     }
 
     /**
@@ -73,7 +104,7 @@ class BillingController extends Controller
 
         return back()->with(
             'success',
-            'Downgrade scheduled for next billing cycle.'
+            'Downgrade agendado para o próximo ciclo de faturação.'
         );
     }
 
