@@ -50,6 +50,28 @@ const isNearLimit = computed(
 const isLimitExceeded = computed(
     () => membersPercent.value >= 100 || projectsPercent.value >= 100
 );
+const trialEndsAt = computed(() => tenant.value?.trial_ends_at);
+
+const trialDaysLeft = computed(() => {
+    if (!trialEndsAt.value) return null;
+
+    const end = new Date(trialEndsAt.value);
+    const now = new Date();
+
+    const diff = Math.ceil(
+        (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    return diff > 0 ? diff : 0;
+});
+
+const showTrialWarning = computed(() => {
+    return (
+        trialEndsAt.value !== null &&
+        trialDaysLeft.value !== null &&
+        trialDaysLeft.value <= 3
+    );
+});
 
 function switchTenant(event) {
     router.post(
@@ -241,6 +263,24 @@ watch(
                 </div>
             </div>
         </nav>
+        <div v-if="showTrialWarning" class="mx-auto max-w-7xl px-6 mt-4">
+            <div
+                class="rounded-lg bg-yellow-50 border border-yellow-200 p-4 text-yellow-900 flex items-center justify-between"
+            >
+                <div>
+                    ⏳ <strong>Trial a terminar</strong><br />
+                    O seu período experimental termina em
+                    {{ trialDaysLeft }} dia(s).
+                </div>
+
+                <Link
+                    :href="route('pricing.index')"
+                    class="underline font-medium"
+                >
+                    Fazer upgrade
+                </Link>
+            </div>
+        </div>
 
         <main>
             <slot />
